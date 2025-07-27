@@ -1,3 +1,9 @@
+@import url("https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap");
+
+body {
+    font-family: "Roboto", sans-serif;
+}
+
 .gradient-card {
     background: linear-gradient(135deg, #007bff, #00c6ff);
     color: white;
@@ -18,4 +24,13 @@
 .form-switch .form-check-input.big-switch {
     width: 3rem;
     height: 1.5rem;
+}
+
+.card-monitoring {
+    height: 140px !important;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.3);
+}
+.my-card {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.3);
+    border: none;
 }
