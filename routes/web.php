@@ -19,4 +19,4 @@ use App\Http\Controllers\MainController;
 // });
 
 Route::get('/', [MainController::class, 'index']);
-Route::get('/history', [MainController::class, 'history']);
+Route::get('/jadwal', [MainController::class, 'jadwal']);

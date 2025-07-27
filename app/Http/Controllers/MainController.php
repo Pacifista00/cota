@@ -8,13 +8,14 @@ use App\Models\Feed;
 
 class MainController extends Controller
 {
-    public function index(){
+    public function index()
+    {
         $sensor = Sensor::latest()->first();
         $sensorHistory = Sensor::all();
         $feed = Feed::latest()->first();
         $feedHistory = Feed::all();
 
-        return view('index',[
+        return view('index', [
             'sensor' => $sensor,
             'sensorHistory' => $sensorHistory,
             'feed' => $feed,
@@ -22,9 +23,10 @@ class MainController extends Controller
             'active' => 'monitoring'
         ]);
     }
-    public function history(){
-        return view('history',[
-           'active' => 'history'
+    public function jadwal()
+    {
+        return view('jadwal', [
+            'active' => 'jadwal'
         ]);
     }
 }
