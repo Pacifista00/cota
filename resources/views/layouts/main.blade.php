@@ -4,10 +4,10 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <link rel="apple-touch-icon" sizes="76x76" href="{{ asset('argon/img/apple-icon.png') }}">
-    <link rel="icon" type="image/png" href="{{ asset('argon/img/favicon.png') }}">
+    <link rel="apple-touch-icon" sizes="76x76" href="{{ asset('img/logo.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('img/logo.png') }}">
     <title>
-        Argon Dashboard 3 by Creative Tim
+        Monitoring COTA
     </title>
     <!--     Fonts and icons     -->
     <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700" rel="stylesheet" />
@@ -19,6 +19,10 @@
     <!-- CSS Files -->
     <link id="pagestyle" href="{{ asset('argon/css/argon-dashboard.css?v=2.1.0') }}" rel="stylesheet" />
     <script src="https://kit.fontawesome.com/f1a06f399e.js" crossorigin="anonymous"></script>
+    {{-- sweetalert --}}
+    <!-- SweetAlert2 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 </head>
 
 <body class="g-sidenav-show   bg-gray-100">
@@ -33,35 +37,50 @@
     <script>
         var ctx1 = document.getElementById("chart-line").getContext("2d");
 
-        var gradientStroke1 = ctx1.createLinearGradient(0, 230, 0, 50);
+        var gradientStrokePH = ctx1.createLinearGradient(0, 230, 0, 50);
+        gradientStrokePH.addColorStop(1, 'rgba(94, 114, 228, 0.2)');
+        gradientStrokePH.addColorStop(0.2, 'rgba(94, 114, 228, 0.0)');
+        gradientStrokePH.addColorStop(0, 'rgba(94, 114, 228, 0)');
 
-        gradientStroke1.addColorStop(1, 'rgba(94, 114, 228, 0.2)');
-        gradientStroke1.addColorStop(0.2, 'rgba(94, 114, 228, 0.0)');
-        gradientStroke1.addColorStop(0, 'rgba(94, 114, 228, 0)');
+        var gradientStrokeTemp = ctx1.createLinearGradient(0, 230, 0, 50);
+        gradientStrokeTemp.addColorStop(1, 'rgba(255, 99, 132, 0.2)');
+        gradientStrokeTemp.addColorStop(0.2, 'rgba(255, 99, 132, 0.0)');
+        gradientStrokeTemp.addColorStop(0, 'rgba(255, 99, 132, 0)');
+
         new Chart(ctx1, {
             type: "line",
             data: {
-                labels: ["1-Apr", "2-Apr", "3-Apr", "4-apr", "5-apr", "7-apr"],
+                labels: labels,
                 datasets: [{
-                    label: "Mobile apps",
-                    tension: 0.4,
-                    borderWidth: 0,
-                    pointRadius: 0,
-                    borderColor: "#5e72e4",
-                    backgroundColor: gradientStroke1,
-                    borderWidth: 3,
-                    fill: true,
-                    data: [6, 3, 3, 2, 5, 5, 6],
-                    maxBarThickness: 6
-
-                }],
+                        label: "Keasaman",
+                        tension: 0.4,
+                        borderWidth: 3,
+                        pointRadius: 0,
+                        borderColor: "#5e72e4",
+                        backgroundColor: gradientStrokePH,
+                        fill: true,
+                        data: dataPH,
+                        maxBarThickness: 6
+                    },
+                    {
+                        label: "Suhu",
+                        tension: 0.4,
+                        borderWidth: 3,
+                        pointRadius: 0,
+                        borderColor: "#ff6384",
+                        backgroundColor: gradientStrokeTemp,
+                        fill: true,
+                        data: dataTemp,
+                        maxBarThickness: 6
+                    }
+                ],
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        display: false,
+                        display: true,
                     }
                 },
                 interaction: {
@@ -113,30 +132,32 @@
             },
         });
     </script>
+
     <script>
-        var ctx1 = document.getElementById("chart-line-2").getContext("2d");
+        const ctx2 = document.getElementById("chart-line-2").getContext("2d");
 
-        var gradientStroke1 = ctx1.createLinearGradient(0, 230, 0, 50);
-
+        const gradientStroke1 = ctx1.createLinearGradient(0, 230, 0, 50);
         gradientStroke1.addColorStop(1, 'rgba(94, 114, 228, 0.2)');
         gradientStroke1.addColorStop(0.2, 'rgba(94, 114, 228, 0.0)');
         gradientStroke1.addColorStop(0, 'rgba(94, 114, 228, 0)');
-        new Chart(ctx1, {
+
+        new Chart(ctx2, {
             type: "line",
             data: {
-                labels: ["1-Apr", "2-Apr", "3-Apr", "4-apr", "5-apr", "7-apr"],
+                labels: labels,
                 datasets: [{
-                    label: "Mobile apps",
+                    label: "Kekeruhan",
                     tension: 0.4,
                     borderWidth: 0,
-                    pointRadius: 0,
+                    pointRadius: 3,
+                    pointBackgroundColor: "#5e72e4",
+                    pointBorderColor: "transparent",
                     borderColor: "#5e72e4",
                     backgroundColor: gradientStroke1,
                     borderWidth: 3,
                     fill: true,
-                    data: [6, 3, 3, 2, 5, 5, 6],
+                    data: dataTurb,
                     maxBarThickness: 6
-
                 }],
             },
             options: {
@@ -144,7 +165,13 @@
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        display: false,
+                        display: true,
+                        labels: {
+                            font: {
+                                family: 'Open Sans',
+                                size: 12
+                            }
+                        }
                     }
                 },
                 interaction: {

@@ -20,3 +20,4 @@ use App\Http\Controllers\MainController;
 
 Route::get('/', [MainController::class, 'index']);
 Route::get('/jadwal', [MainController::class, 'jadwal']);
+Route::get('/riwayat', [MainController::class, 'riwayat']);
