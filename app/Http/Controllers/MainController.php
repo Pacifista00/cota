@@ -5,13 +5,16 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Sensor;
 use App\Models\Feed;
+use App\Models\FeedSchedule;
+use App\Models\FeedExecution;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Carbon;
 
 class MainController extends Controller
 {
     public function index()
     {
-        $sensor = Sensor::latest()->first();
+        // $sensor = Sensor::latest()->first();
         $feed = Feed::latest()->first();
 
         $sevenDays = collect();
@@ -37,7 +40,7 @@ class MainController extends Controller
         }
 
         return view('index', [
-            'sensor' => $sensor,
+            // 'sensor' => $sensor,
             'sensorHistory' => Sensor::all(),
             'feed' => $feed,
             'feedHistory' => Feed::all(),
@@ -50,14 +53,30 @@ class MainController extends Controller
     }
     public function jadwal()
     {
+        $tanggalHariIni = Carbon::today();
+
+        $jadwalList = FeedSchedule::with(['executions' => function ($query) use ($tanggalHariIni) {
+            $query->whereDate('executed_at', $tanggalHariIni);
+        }])->get();
+
         return view('jadwal', [
-            'active' => 'jadwal'
+            'active' => 'jadwal',
+            'jadwalList' => $jadwalList
         ]);
     }
-    public function riwayat()
+    public function riwayatSensor()
     {
-        return view('riwayat', [
-            'active' => 'riwayat'
+        return view('riwayat-sensor', [
+            'active' => 'riwayat_sensor',
+            'sensorHistories' => Sensor::orderBy('created_at', 'desc')->paginate(20),
         ]);
     }
+    public function riwayatPakan()
+    {
+        return view('riwayat-pakan', [
+            'active' => 'riwayat_pakan',
+            'feedHistories' => FeedExecution::orderBy('executed_at', 'desc')->paginate(20),
+        ]);
+    }
+
 }

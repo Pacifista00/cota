@@ -32,14 +32,35 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link {{ $active == 'riwayat' ? 'active' : '' }}" href="{{ url('/riwayat') }}">
+                <a class="nav-link {{ $active == 'riwayat_sensor' || $active == 'riwayat_pakan' ? '' : 'collapsed' }}"
+                    data-bs-toggle="collapse" href="#submenuRiwayat" role="button"
+                    aria-expanded="{{ $active == 'riwayat_sensor' || $active == 'riwayat_pakan' ? 'true' : 'false' }}"
+                    aria-controls="submenuRiwayat">
                     <div
                         class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
                         <i class="ni ni-calendar-grid-58 text-dark text-sm opacity-10"></i>
                     </div>
                     <span class="nav-link-text ms-1">Riwayat</span>
                 </a>
+                <div class="collapse {{ $active == 'riwayat_sensor' || $active == 'riwayat_pakan' ? 'show' : '' }}"
+                    id="submenuRiwayat">
+                    <ul class="nav ms-4 flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link {{ $active == 'riwayat_sensor' ? 'active' : '' }}"
+                                href="{{ url('/riwayat/sensor') }}">
+                                Riwayat Sensor
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ $active == 'riwayat_pakan' ? 'active' : '' }}"
+                                href="{{ url('/riwayat/pakan') }}">
+                                Riwayat Pakan Otomatis
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             </li>
+
             {{-- <li class="nav-item">
                 <a class="nav-link " href="../pages/billing.html">
                     <div

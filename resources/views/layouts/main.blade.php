@@ -18,10 +18,14 @@
     <script src="https://kit.fontawesome.com/42d5adcbca.js" crossorigin="anonymous"></script>
     <!-- CSS Files -->
     <link id="pagestyle" href="{{ asset('argon/css/argon-dashboard.css?v=2.1.0') }}" rel="stylesheet" />
-    <script src="https://kit.fontawesome.com/f1a06f399e.js" crossorigin="anonymous"></script>
+    <!-- Versi Font Awesome CDN yang tidak menggunakan kit -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+        integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
     {{-- sweetalert --}}
     <!-- SweetAlert2 CDN -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <link rel="stylesheet" href="{{ asset('css/style.css') }}">
 
 </head>
 
@@ -232,6 +236,26 @@
             Scrollbar.init(document.querySelector('#sidenav-scrollbar'), options);
         }
     </script>
+    <script>
+        setInterval(() => {
+            const waktuSekarang = new Date().toLocaleTimeString();
+
+            fetch('/api/feed/ready')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.length > 0) {
+                        data.forEach(jadwal => {
+                            fetch('/api/feed/give/' + jadwal.id, {
+                                    method: 'POST'
+                                }).then(res => res.json())
+                                .then(result => {}).catch(err => {});
+                        });
+                    } else {}
+                }).catch(err => {});
+
+        }, 3000); // cek tiap 10 detik
+    </script>
+
     <!-- Github buttons -->
     <script async defer src="https://buttons.github.io/buttons.js"></script>
     <!-- Control Center for Soft Dashboard: parallax effects, scripts for the example pages etc -->

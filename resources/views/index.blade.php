@@ -7,14 +7,13 @@
         <div class="container-fluid py-4">
             <div class="row">
                 <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
-                    <div class="card">
+                    <div class="card card-sensor">
                         <div class="card-body p-3">
                             <div class="row">
                                 <div class="col-8">
                                     <div class="numbers">
-                                        <p class="text-sm mb-0 text-uppercase font-weight-bold">Kekeruhan</p>
-                                        <h5 class="font-weight-bolder">
-                                            {{ $sensor->kekeruhan }} NTU
+                                        <p class="text-sm mb-0 font-weight-bold">Kekeruhan Air</p>
+                                        <h5 class="font-weight-bolder"><span id="kekeruhan-value">0</span> NTU
                                         </h5>
                                     </div>
                                 </div>
@@ -29,14 +28,13 @@
                     </div>
                 </div>
                 <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
-                    <div class="card">
+                    <div class="card card-sensor">
                         <div class="card-body p-3">
                             <div class="row">
                                 <div class="col-8">
                                     <div class="numbers">
-                                        <p class="text-sm mb-0 text-uppercase font-weight-bold">Keasaman</p>
-                                        <h5 class="font-weight-bolder">
-                                            {{ $sensor->keasaman }}
+                                        <p class="text-sm mb-0 font-weight-bold">pH Air</p>
+                                        <h5 class="font-weight-bolder"><span id="keasaman-value">0</span>
                                         </h5>
                                     </div>
                                 </div>
@@ -51,14 +49,13 @@
                     </div>
                 </div>
                 <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
-                    <div class="card">
+                    <div class="card card-sensor">
                         <div class="card-body p-3">
                             <div class="row">
                                 <div class="col-8">
                                     <div class="numbers">
-                                        <p class="text-sm mb-0 text-uppercase font-weight-bold">Suhu</p>
-                                        <h5 class="font-weight-bolder">
-                                            {{ $sensor->suhu }}°C
+                                        <p class="text-sm mb-0 font-weight-bold">Suhu Air</p>
+                                        <h5 class="font-weight-bolder"><span id="suhu-value">0</span> °C
                                         </h5>
                                     </div>
                                 </div>
@@ -73,15 +70,21 @@
                     </div>
                 </div>
                 <div class="col-xl-3 col-sm-6">
-                    <div class="card">
+                    <div class="card card-sensor">
                         <div class="card-body p-3">
                             <div class="row">
                                 <div class="col-8">
                                     <div class="numbers">
                                         <p class="text-sm mb-0 text-uppercase font-weight-bold">Pakan Otomatis</p>
-                                        <div class="form-check form-switch mt-2">
-                                            <input class="form-check-input" type="checkbox" id="pakanToggle"
-                                                {{ $feed->status === 'ON' ? 'checked' : '' }}>
+                                        <div class="form-check form-switch mt-2 ps-0">
+                                            <form action="{{ url('/beri-pakan') }}" method="POST"
+                                                class="my-0 py-0 me-auto">
+                                                @csrf
+                                                <button type="submit" class="py-1 my-0 rounded-pill btn btn-primary">Beri
+                                                    Pakan</button>
+                                            </form>
+                                            {{-- <input class="form-check-input" type="checkbox" id="pakanToggle"
+                                                {{ $feed->status === 'ON' ? 'checked' : '' }}> --}}
                                         </div>
                                     </div>
                                 </div>
@@ -132,7 +135,26 @@
             @include('partials.footer')
         </div>
     </main>
-    {{-- start script post feed & sweetalert --}}
+
+    <script>
+        setInterval(() => {
+            fetch('/api/sensor-data/latest')
+                .then(response => response.json())
+                .then(response => {
+                    const sensor = response.data; // Ini adalah { keasaman, kekeruhan, suhu, waktu }
+                    console.log(sensor);
+
+                    document.getElementById('kekeruhan-value').textContent = sensor.kekeruhan;
+                    document.getElementById('keasaman-value').textContent = sensor.keasaman;
+                    document.getElementById('suhu-value').textContent = sensor.suhu;
+                })
+                .catch(error => {
+                    console.error('Gagal mengambil data sensor:', error);
+                });
+        }, 1000); // update setiap 3 detik
+    </script>
+
+    // {{-- start script post feed & sweetalert --}}
     <script>
         const labels = @json($chartLabels);
         const dataPH = @json($chartPH);
@@ -140,57 +162,22 @@
         const dataTurb = @json($chartTurb);
     </script>
     <script>
-        document.getElementById('pakanToggle').addEventListener('change', function() {
-            const isChecked = this.checked;
-            const command = isChecked ? 'ON' : 'OFF';
-            const deviceId = this.getAttribute('data-device-id');
-            const toggleElement = this;
-
-            fetch('/api/feed/command', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-                    body: JSON.stringify({
-                        command: command,
-                        device_id: deviceId
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 201) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Berhasil',
-                            text: data.message,
-                            timer: 2000,
-                            showConfirmButton: false
-                        });
-                    } else if (data.status === 409) {
-                        // Kembalikan toggle ke posisi sebelumnya karena tidak berubah
-                        toggleElement.checked = !isChecked;
-                        Swal.fire({
-                            icon: 'info',
-                            title: 'Tidak ada perubahan',
-                            text: data.message,
-                            timer: 2500,
-                            showConfirmButton: false
-                        });
-                    }
-                })
-                .catch(error => {
-                    console.error('Gagal menyimpan status:', error);
-                    toggleElement.checked = !isChecked;
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Gagal',
-                        text: 'Terjadi kesalahan saat menyimpan status.',
-                        timer: 2500,
-                        showConfirmButton: false
-                    });
-                });
-        });
+        @if (session('success'))
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil',
+                text: '{{ session('success') }}',
+                confirmButtonText: 'OK'
+            });
+        @elseif (session('error'))
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal',
+                text: '{{ session('error') }}',
+                confirmButtonText: 'Coba Lagi'
+            });
+        @endif
     </script>
-    {{-- end script post feed & sweetalert --}}
+
+    // {{-- end script post feed & sweetalert --}}
 @endsection

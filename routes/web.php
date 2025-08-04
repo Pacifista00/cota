@@ -2,6 +2,9 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MainController;
+use App\Http\Controllers\FeedScheduleController;
+use App\Http\Controllers\FeedController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -20,4 +23,11 @@ use App\Http\Controllers\MainController;
 
 Route::get('/', [MainController::class, 'index']);
 Route::get('/jadwal', [MainController::class, 'jadwal']);
-Route::get('/riwayat', [MainController::class, 'riwayat']);
+Route::get('/riwayat/sensor', [MainController::class, 'riwayatSensor']);
+Route::get('/riwayat/pakan', [MainController::class, 'riwayatPakan']);
+
+Route::post('/beri-pakan', [FeedController::class, 'beriPakan']);
+
+Route::post('/jadwal/store', [FeedScheduleController::class, 'store']);
+Route::put('/jadwal/update/{id}', [FeedScheduleController::class, 'update']);
+Route::delete('/jadwal/delete/{id}', [FeedScheduleController::class, 'destroy']);

@@ -4,53 +4,112 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Feed;
+use App\Models\FeedSchedule;
+use App\Models\FeedExecution;
 use App\Http\Resources\FeedResource;
+use App\Http\Resources\FeedExecutionResource;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Carbon;
 
 class FeedController extends Controller
 {
-    public function store(Request $request)
+    public function beriPakan()
     {
-        $request->validate([
-            'command' => 'required|in:ON,OFF'
-        ]);
+        $response = Http::get('http://192.168.18.34/beri-pakan');
 
-        $last = Feed::orderByDesc('created_at')->first();
-
-        if ($last && $last->status === $request->command) {
-            if($last->status == "ON"){
-                return response()->json([
-                    'message' => 'Perintah tidak disimpan. Pakan otomatis sudah dalam keadaan aktif!',
-                    'status' => 409,
-                    'data' => new FeedResource($last)
-                ], 409);
-            }elseif($last->status == "OFF"){
-                return response()->json([
-                    'message' => 'Perintah tidak disimpan. Pakan otomatis sudah dalam keadaan nonaktif!',
-                    'status' => 409,
-                    'data' => new FeedResource($last)
-                ], 409);
-            }
+        if ($response->successful()) {
+            return response()->json([
+                'message' => 'Pakan berhasil diberikan!',
+                'status' => 200
+            ], 200);
         }
 
-        $feed = Feed::create([
-            'device_id' => $request->device_id,
-            'status' => $request->command
-        ]);
-
-        if($request->command == "ON"){
-            return response()->json([
-                'message' => 'Pakan otomatis berhasil dinyalakan.',
-                'status' => 201,
-                'data' => new FeedResource($feed)
-            ], 201);
-        }elseif($request->command == "OFF"){
-            return response()->json([
-                'message' => 'Pakan otomatis berhasil dimatikan.',
-                'status' => 201,
-                'data' => new FeedResource($feed)
-            ], 201);
-        }
+        return response()->json([
+            'message' => 'Gagal menembak API!',
+            'status' => 500
+        ], 500);
     }
+    public function beriPakanTerjadwal(Request $request, $id)
+    {
+        $jadwal = FeedSchedule::find($id);
+
+        if (!$jadwal) {
+            return response()->json([
+                'message' => 'Jadwal tidak ditemukan.',
+                'status' => 404
+            ], 404);
+        }
+
+        // Cek apakah jadwal sudah dieksekusi hari ini
+        $sudahAda = $jadwal->executions()
+            ->whereDate('executed_at', Carbon::today())
+            ->exists();
+
+        if ($sudahAda) {
+            return response()->json([
+                'message' => 'Jadwal sudah dieksekusi hari ini.',
+                'status' => 200
+            ], 200);
+        }
+
+        // Coba tembak API pakan
+        $response = Http::get('http://192.168.18.34/beri-pakan');
+
+        if ($response->successful()) {
+            // Simpan eksekusi jika sukses
+            FeedExecution::create([
+                'feed_schedule_id' => $jadwal->id,
+                'status' => 'success',
+                'executed_at' => now(),
+            ]);
+
+            return response()->json([
+                'message' => 'Pakan berhasil diberikan!',
+                'status' => 200,
+            ], 200);
+        } else {
+            // Simpan eksekusi jika gagal
+            FeedExecution::create([
+                'feed_schedule_id' => $jadwal->id,
+                'status' => 'failed',
+                'executed_at' => now(),
+            ]);
+
+            return response()->json([
+                'message' => 'Pakan gagal diberikan!',
+                'status' => 500,
+            ], 500);
+        }
+
+        return response()->json([
+            'message' => 'Pakan gagal diberikan!',
+            'status' => 500,
+        ], 500);
+    }
+
+    public function siap()
+    {
+        $now = Carbon::now(); // waktu sekarang
+        $satuMenitLalu = $now->copy()->subMinute(); // waktu 1 menit yang lalu
+        $tanggalHariIni = $now->toDateString();
+
+        // Format jadi H:i:s
+        $nowFormatted = $now->format('H:i:s');
+        $satuMenitLaluFormatted = $satuMenitLalu->format('H:i:s');
+
+        // Format jadi His
+        $nowHis = $now->format('His');
+        $satuMenitLaluHis = $satuMenitLalu->format('His');
+
+        $jadwals = FeedSchedule::whereTime('waktu_pakan', '<=', $now->format('H:i:s'))
+        ->whereTime('waktu_pakan', '>=', $satuMenitLalu->format('H:i:s'))
+        ->whereDate('created_at', $tanggalHariIni)
+        ->get();
+
+        return response()->json($jadwals);
+    }
+
+
 
     public function status(Request $request)
     {
@@ -72,12 +131,12 @@ class FeedController extends Controller
 
     public function history(Request $request)
     {
-        $historyData = Feed::orderBy('created_at', 'desc')->get();
+        $historyData = FeedExecution::orderBy('executed_at', 'desc')->get();
 
         return response()->json([
             'message' => 'Histori feed berhasil dimuat.',
             'status' => 200,
-            'data' => FeedResource::collection($historyData)
+            'data' => FeedExecutionResource::collection($historyData)
         ], 200);
     }
 }

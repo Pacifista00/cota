@@ -11,13 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('users', function (Blueprint $table) {
+        Schema::create('feed_executions', function (Blueprint $table) {
             $table->id();
-            $table->string('fullname');
-            $table->string('email')->unique();
-            $table->string('no_telepon')->unique();
-            $table->string('password');
-            $table->enum('role', ['super-admin', 'admin', 'user']);
+            $table->foreignId('feed_schedule_id')->constrained()->onDelete('cascade');
+            $table->enum('status', ['success','failed']);
+            $table->timestamp('executed_at');
             $table->timestamps();
         });
     }
@@ -27,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('users');
+        Schema::dropIfExists('feed_executions');
     }
 };
