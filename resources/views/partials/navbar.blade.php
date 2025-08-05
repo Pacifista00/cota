@@ -18,8 +18,15 @@
             <ul class="navbar-nav  justify-content-end">
                 <li class="nav-item d-flex align-items-center">
                     <a href="javascript:;" class="nav-link text-white font-weight-bold px-0">
-                        <i class="fa fa-sign-out-alt me-sm-1"></i>
-                        <span class="d-sm-inline d-none">Logout</span>
+                        <form action="{{ url('/logout') }}" method="POST">
+                            @csrf
+                            <button type="submit"
+                                style="background: transparent; border: none; color: inherit; padding: 0;"
+                                class="d-sm-inline d-none">
+                                <i class="fa fa-sign-out-alt me-sm-1"></i> Logout
+                            </button>
+                        </form>
+
                     </a>
                 </li>
                 <li class="nav-item d-xl-none ps-3 d-flex align-items-center">
