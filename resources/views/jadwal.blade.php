@@ -73,7 +73,7 @@
                                                             required>
                                                     </div>
                                                     <div class="modal-footer">
-                                                        <button type="submit" class="btn btn-secondary"
+                                                        <button type="button" class="btn btn-secondary"
                                                             data-bs-dismiss="modal">Batal</button>
                                                         <button type="submit" class="btn btn-primary">Simpan</button>
                                                     </div>
@@ -97,7 +97,7 @@
                                                         <p>Apakah anda yakin ingin menghapus jadwal ini?</p>
                                                     </div>
                                                     <div class="modal-footer">
-                                                        <button type="submit" class="btn btn-secondary"
+                                                        <button type="button" class="btn btn-secondary"
                                                             data-bs-dismiss="modal">Batal</button>
                                                         <button type="submit" class="btn btn-danger">Hapus</button>
                                                     </div>
@@ -155,6 +155,17 @@
                 title: 'Gagal',
                 text: '{{ session('error') }}',
                 confirmButtonText: 'Coba Lagi'
+            });
+        @endif
+    </script>
+    <script>
+        @if ($errors->any())
+            let errorMessages = `{!! implode('<br>', $errors->all()) !!}`;
+            Swal.fire({
+                icon: 'error',
+                title: 'Validasi Gagal',
+                html: errorMessages,
+                confirmButtonText: 'OK'
             });
         @endif
     </script>

@@ -7,8 +7,10 @@ use App\Models\Sensor;
 use App\Models\Feed;
 use App\Models\FeedSchedule;
 use App\Models\FeedExecution;
+use App\Models\Pond;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class MainController extends Controller
 {
@@ -76,6 +78,14 @@ class MainController extends Controller
         return view('riwayat-pakan', [
             'active' => 'riwayat_pakan',
             'feedHistories' => FeedExecution::orderBy('executed_at', 'desc')->paginate(20),
+        ]);
+    }
+    public function tambak()
+    {
+        $idUser = auth()->id();
+        return view('tambak', [
+            'active' => 'tambak',
+            'ponds' =>  Pond::where('user_id', $idUser)->get()
         ]);
     }
 
