@@ -69,6 +69,15 @@
                     </ul>
                 </div>
             </li>
+            <li class="nav-item">
+                <a href="{{ asset('aplikasi/COTA v1.2.1.apk') }}" download
+                class="nav-link btn btn-primary bg-primary d-flex align-items-center">
+                    <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
+                        <i class="ni ni-cloud-download-95 text-white text-sm opacity-10"></i>
+                    </div>
+                    <span class="ms-1 text-white">Download Aplikasi</span>
+                </a>
+            </li>
 
             {{-- <li class="nav-item">
                 <a class="nav-link " href="../pages/billing.html">
