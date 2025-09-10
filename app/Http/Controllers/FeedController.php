@@ -10,29 +10,39 @@ use App\Http\Resources\FeedResource;
 use App\Http\Resources\FeedExecutionResource;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Carbon;
+use PhpMqtt\Client\ConnectionSettings;
+use PhpMqtt\Client\MqttClient;
 
 class FeedController extends Controller
 {
-    public function beriPakan()
+    public function beriPakan(Request $request)
     {
-        try {
-            $client = new \GuzzleHttp\Client();
-            $response = $client->get("http://192.168.18.89/beri-pakan");
+        // --- Konfigurasi MQTT (Sudah Diupdate) ---
+        $server   = 'chameleon.lmq.cloudamqp.com';
+        $port     = 8883;
+        $clientId = 'laravel-client-' . rand();
+        $username = 'anfvrqjy';
+        $password = 'V4OJdwnNv8d8nN2OmCbLrdBqDF5-WS5G';
 
-            if ($response->getStatusCode() === 200) {
-                FeedExecution::create([
-                    'status' => 'success',
-                    'executed_at' => now(),
-                ]);
-                return redirect()->back()->with('success', 'Pakan berhasil diberikan!');
-            }
-            FeedExecution::create([
-                'status' => 'failed',
-                'executed_at' => now(),
-            ]);
-            return redirect()->back()->with('error', 'Gagal menembak API! (Status: ' . $response->getStatusCode() . ')');
+        // GANTI topik dinamis menjadi topik statis/broadcast
+        $topic    = 'cota/command/feed_all';
+
+        try {
+            // Pengaturan koneksi untuk menggunakan TLS (koneksi aman)
+            $connectionSettings = (new ConnectionSettings)
+                ->setUseTls(true)
+                ->setTlsSelfSignedAllowed(true)
+                ->setUsername($username)
+                ->setPassword($password);
+
+            $mqtt = new MqttClient($server, $port, $clientId);
+            $mqtt->connect($connectionSettings, true);
+            $mqtt->publish($topic, 'FEED', MqttClient::QOS_AT_LEAST_ONCE);
+            $mqtt->disconnect();
+
+            return response()->json(['status' => 'success', 'message' => 'Perintah pakan broadcast telah dikirim!']);
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
+            return response()->json(['status' => 'error', 'message' => 'Gagal terhubung ke MQTT Broker: ' . $e->getMessage()], 500);
         }
     }
     public function beriPakanTerjadwal(Request $request, $id)
