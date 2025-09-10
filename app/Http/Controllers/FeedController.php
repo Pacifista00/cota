@@ -15,19 +15,25 @@ class FeedController extends Controller
 {
     public function beriPakan()
     {
-        $response = Http::get('http://192.168.18.34/beri-pakan');
+        try {
+            $client = new \GuzzleHttp\Client();
+            $response = $client->get("http://192.168.18.89/beri-pakan");
 
-        if ($response->successful()) {
-            return response()->json([
-                'message' => 'Pakan berhasil diberikan!',
-                'status' => 200
-            ], 200);
+            if ($response->getStatusCode() === 200) {
+                FeedExecution::create([
+                    'status' => 'success',
+                    'executed_at' => now(),
+                ]);
+                return redirect()->back()->with('success', 'Pakan berhasil diberikan!');
+            }
+            FeedExecution::create([
+                'status' => 'failed',
+                'executed_at' => now(),
+            ]);
+            return redirect()->back()->with('error', 'Gagal menembak API! (Status: ' . $response->getStatusCode() . ')');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
         }
-
-        return response()->json([
-            'message' => 'Gagal menembak API!',
-            'status' => 500
-        ], 500);
     }
     public function beriPakanTerjadwal(Request $request, $id)
     {
@@ -36,80 +42,74 @@ class FeedController extends Controller
         if (!$jadwal) {
             return response()->json([
                 'message' => 'Jadwal tidak ditemukan.',
-                'status' => 404
+                'status'  => 'error'
             ], 404);
         }
 
-        // Cek apakah jadwal sudah dieksekusi hari ini
-        $sudahAda = $jadwal->executions()
-            ->whereDate('executed_at', Carbon::today())
-            ->exists();
+        $today = Carbon::today()->toDateString(); // gunakan Carbon
 
-        if ($sudahAda) {
+        // Cek apakah sudah dieksekusi hari ini
+        if ($jadwal->last_executed_at === $today) {
             return response()->json([
-                'message' => 'Jadwal sudah dieksekusi hari ini.',
-                'status' => 200
+                'message' => 'Jadwal ini sudah dieksekusi hari ini.',
+                'status'  => 'info'
             ], 200);
         }
 
-        // Coba tembak API pakan
-        $response = Http::get('http://192.168.18.34/beri-pakan');
+        try {
+            $client = new \GuzzleHttp\Client();
+            $response = $client->get("http://192.168.18.89/beri-pakan");
 
-        if ($response->successful()) {
-            // Simpan eksekusi jika sukses
-            FeedExecution::create([
-                'feed_schedule_id' => $jadwal->id,
-                'status' => 'success',
-                'executed_at' => now(),
-            ]);
+            if ($response->getStatusCode() === 200) {
+                // Update jadwal terakhir dieksekusi
+                $jadwal->update([
+                    'last_executed_at' => $today,
+                ]);
+
+                feedExecution::create([
+                    'status' => 'success',
+                    'executed_at' => now(),
+                ]);
+
+                return response()->json([
+                    'message' => 'Pakan berhasil diberikan!',
+                    'status'  => 'success'
+                ], 200);
+            }
 
             return response()->json([
-                'message' => 'Pakan berhasil diberikan!',
-                'status' => 200,
-            ], 200);
-        } else {
-            // Simpan eksekusi jika gagal
+                'message' => 'Gagal menembak API! (Status: ' . $response->getStatusCode() . ')',
+                'status'  => 'error'
+            ], $response->getStatusCode());
+        } catch (\Exception $e) {
             FeedExecution::create([
-                'feed_schedule_id' => $jadwal->id,
                 'status' => 'failed',
                 'executed_at' => now(),
             ]);
 
             return response()->json([
-                'message' => 'Pakan gagal diberikan!',
-                'status' => 500,
+                'message' => 'Error: ' . $e->getMessage(),
+                'status'  => 'error'
             ], 500);
         }
-
-        return response()->json([
-            'message' => 'Pakan gagal diberikan!',
-            'status' => 500,
-        ], 500);
     }
 
     public function siap()
     {
-        $now = Carbon::now(); // waktu sekarang
-        $satuMenitLalu = $now->copy()->subMinute(); // waktu 1 menit yang lalu
+        $now = Carbon::now();
+        $satuMenitLalu = $now->copy()->subMinute();
         $tanggalHariIni = $now->toDateString();
 
-        // Format jadi H:i:s
-        $nowFormatted = $now->format('H:i:s');
-        $satuMenitLaluFormatted = $satuMenitLalu->format('H:i:s');
-
-        // Format jadi His
-        $nowHis = $now->format('His');
-        $satuMenitLaluHis = $satuMenitLalu->format('His');
-
         $jadwals = FeedSchedule::whereTime('waktu_pakan', '<=', $now->format('H:i:s'))
-        ->whereTime('waktu_pakan', '>=', $satuMenitLalu->format('H:i:s'))
-        ->whereDate('created_at', $tanggalHariIni)
-        ->get();
+            ->whereTime('waktu_pakan', '>=', $satuMenitLalu->format('H:i:s'))
+            ->where(function ($q) use ($tanggalHariIni) {
+                $q->whereNull('last_executed_at')
+                    ->orWhereDate('last_executed_at', '<>', $tanggalHariIni);
+            })
+            ->get();
 
         return response()->json($jadwals);
     }
-
-
 
     public function status(Request $request)
     {

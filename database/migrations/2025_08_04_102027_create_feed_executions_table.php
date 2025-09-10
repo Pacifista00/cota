@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('feed_executions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('feed_schedule_id')->constrained()->onDelete('cascade');
-            $table->enum('status', ['success','failed']);
+            // $table->foreignId('feed_schedule_id')->constrained()->onDelete('cascade');
+            $table->enum('status', ['success', 'failed']);
             $table->timestamp('executed_at');
             $table->timestamps();
         });

@@ -238,22 +238,39 @@
     </script>
     <script>
         setInterval(() => {
-            const waktuSekarang = new Date().toLocaleTimeString();
+    const waktuSekarang = new Date().toLocaleTimeString();
+    console.log(`[${waktuSekarang}] Cek jadwal siap jalan...`);
 
-            fetch('/api/feed/ready')
-                .then(res => res.json())
-                .then(data => {
-                    if (data.length > 0) {
-                        data.forEach(jadwal => {
-                            fetch('/api/feed/give/' + jadwal.id, {
-                                    method: 'POST'
-                                }).then(res => res.json())
-                                .then(result => {}).catch(err => {});
+    fetch('/api/feed/ready',{headers: {
+            "Accept": "application/json"
+        }})
+        .then(res => res.json())
+        .then(data => {
+            console.log(`[${waktuSekarang}] Response dari /api/feed/ready:`, data);
+
+            if (data.length > 0) {
+                data.forEach(jadwal => {
+                    console.log(`[${waktuSekarang}] Menjalankan jadwal ID: ${jadwal.id}, Waktu: ${jadwal.waktu_pakan}`);
+
+                    fetch('/api/feed/give/' + jadwal.id)
+                        .then(res => res.json())
+                        .then(result => {
+                            console.log(`[${waktuSekarang}] Hasil eksekusi jadwal ID ${jadwal.id}:`, result);
+                        })
+                        .catch(err => {
+                            console.error(`[${waktuSekarang}] ERROR eksekusi jadwal ID ${jadwal.id}:`, err);
                         });
-                    } else {}
-                }).catch(err => {});
+                });
+            } else {
+                console.log(`[${waktuSekarang}] Tidak ada jadwal yang siap jalan.`);
+            }
+        })
+        .catch(err => {
+            console.error(`[${waktuSekarang}] ERROR saat cek jadwal:`, err);
+        });
 
-        }, 3000); // cek tiap 10 detik
+}, 3000);
+
     </script>
 
     <!-- Github buttons -->

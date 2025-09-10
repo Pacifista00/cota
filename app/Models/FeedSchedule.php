@@ -9,7 +9,7 @@ class FeedSchedule extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['waktu_pakan'];
+    protected $fillable = ['waktu_pakan', 'last_executed_at'];
 
     public function executions()
     {

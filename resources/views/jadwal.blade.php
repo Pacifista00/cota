@@ -22,11 +22,6 @@
                                     </th>
                                     <th>
                                         <div class="text-center">
-                                            <h6 class="text-lg mb-0">Status</h6>
-                                        </div>
-                                    </th>
-                                    <th>
-                                        <div class="text-center">
                                             <h6 class="text-lg mb-0">Aksi</h6>
                                         </div>
                                     </th>
@@ -37,14 +32,6 @@
                                             <div class="text-center">
                                                 <p class="text-sm font-weight-bold mb-0">{{ $jadwalItem->waktu_pakan }}
                                                 </p>
-                                            </div>
-                                        </td>
-                                        <td class="w-30">
-                                            <div class="text-center">
-                                                <span
-                                                    class="py-1 px-2 rounded {{ $jadwalItem->executions->count() > 0 ? 'text-success bg-success-subtle' : 'text-danger bg-danger-subtle' }}">
-                                                    {{ $jadwalItem->executions->count() > 0 ? 'Sudah diberikan' : 'Belum diberikan' }}
-                                                </span>
                                             </div>
                                         </td>
                                         <td class="text-center">

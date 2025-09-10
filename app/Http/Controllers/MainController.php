@@ -57,15 +57,15 @@ class MainController extends Controller
     {
         $tanggalHariIni = Carbon::today();
 
-        $jadwalList = FeedSchedule::with(['executions' => function ($query) use ($tanggalHariIni) {
-            $query->whereDate('executed_at', $tanggalHariIni);
-        }])->get();
+        // Ambil semua jadwal
+        $jadwalList = FeedSchedule::all();
 
         return view('jadwal', [
             'active' => 'jadwal',
             'jadwalList' => $jadwalList
         ]);
     }
+
     public function riwayatSensor()
     {
         return view('riwayat-sensor', [
@@ -88,5 +88,4 @@ class MainController extends Controller
             'ponds' =>  Pond::where('user_id', $idUser)->get()
         ]);
     }
-
 }

@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('feed_schedules', function (Blueprint $table) {
             $table->id();
             $table->time('waktu_pakan');
+            $table->date('last_executed_at')->nullable();
             $table->timestamps();
         });
     }

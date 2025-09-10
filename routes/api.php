@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\SensorController;
 use App\Http\Controllers\FeedController;
 use App\Http\Controllers\FeedScheduleController;
+use App\Http\Controllers\PondController;
 
 /*
 |--------------------------------------------------------------------------
@@ -28,16 +29,11 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 
-    Route::get('/sensor-data/latest', [SensorController::class, 'latest']);
-    Route::post('/sensor-data/insert', [SensorController::class, 'store']);
     Route::get('/sensor-data/history', [SensorController::class, 'history']);
 
     // Route::post('/feed/command', [FeedController::class, 'store']);
     // Route::get('/feed/status', [FeedController::class, 'status']);
 
-    Route::get('/feed/give', [FeedController::class, 'beriPakan']);
-    Route::post('/feed/give/{id}', [FeedController::class, 'beriPakanTerjadwal']);
-    Route::get('/feed/ready', [FeedController::class, 'siap']);
     Route::get('/feed/history', [FeedController::class, 'history']);
 
     Route::post('/feed-schedule/insert', [FeedScheduleController::class, 'store']);
@@ -48,3 +44,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::put('/pond/update/{id}', [PondController::class, 'update']);
     Route::delete('/pond/delete/{id}', [PondController::class, 'destroy']);
 });
+
+Route::get('/feed/ready', [FeedController::class, 'siap']);
+Route::get('/feed/give', [FeedController::class, 'beriPakan']);
+Route::get('/feed/give/{id}', [FeedController::class, 'beriPakanTerjadwal']);
+Route::get('/sensor-data/latest', [SensorController::class, 'latest']);
+Route::post('/sensor-data/insert', [SensorController::class, 'store']);

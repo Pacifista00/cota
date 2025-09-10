@@ -13,7 +13,7 @@ class FeedExecution extends Model
         'executed_at' => 'datetime',
     ];
 
-    protected $fillable = ['feed_schedule_id', 'status'];
+    protected $fillable = ['status', 'executed_at'];
 
     public function schedule()
     {

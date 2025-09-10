@@ -151,7 +151,7 @@
                 .catch(error => {
                     console.error('Gagal mengambil data sensor:', error);
                 });
-        }, 1000); // update setiap 3 detik
+        }, 3000); // update setiap 3 detik
     </script>
 
     // {{-- start script post feed & sweetalert --}}
