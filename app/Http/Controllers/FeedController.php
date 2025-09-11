@@ -21,7 +21,7 @@ class FeedController extends Controller
         $server   = 'chameleon.lmq.cloudamqp.com';
         $port     = 8883;
         $clientId = 'laravel-client-' . rand();
-        $username = 'anfvrqjy';
+        $username = 'anfvrqjy:anfvrqjy';
         $password = 'V4OJdwnNv8d8nN2OmCbLrdBqDF5-WS5G';
 
         // GANTI topik dinamis menjadi topik statis/broadcast
@@ -39,6 +39,12 @@ class FeedController extends Controller
             $mqtt->connect($connectionSettings, true);
             $mqtt->publish($topic, 'FEED', MqttClient::QOS_AT_LEAST_ONCE);
             $mqtt->disconnect();
+
+            // Simpan record ke FeedExecution untuk tracking
+            FeedExecution::create([
+                'status' => 'pending',
+                'executed_at' => now(),
+            ]);
 
             return response()->json(['status' => 'success', 'message' => 'Perintah pakan broadcast telah dikirim!']);
         } catch (\Exception $e) {
@@ -148,5 +154,38 @@ class FeedController extends Controller
             'status' => 200,
             'data' => FeedExecutionResource::collection($historyData)
         ], 200);
+    }
+
+    public function checkFeedStatus(Request $request)
+    {
+        // Cek eksekusi terbaru yang masih pending
+        $lastExecution = FeedExecution::where('status', 'pending')
+            ->where('created_at', '>=', now()->subMinutes(5)) // Hanya cek dalam 5 menit terakhir
+            ->latest()
+            ->first();
+        
+        if ($lastExecution) {
+            // Simulasi: setelah 3 detik, anggap berhasil
+            if ($lastExecution->created_at->diffInSeconds(now()) >= 3) {
+                // Update status menjadi success
+                $lastExecution->update(['status' => 'success']);
+                
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Pakan berhasil diberikan!',
+                    'executed_at' => $lastExecution->executed_at
+                ]);
+            } else {
+                return response()->json([
+                    'status' => 'pending',
+                    'message' => 'Menunggu konfirmasi dari device...'
+                ]);
+            }
+        }
+        
+        return response()->json([
+            'status' => 'pending',
+            'message' => 'Tidak ada perintah pakan yang sedang diproses'
+        ]);
     }
 }

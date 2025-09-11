@@ -48,5 +48,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
 Route::get('/feed/ready', [FeedController::class, 'siap']);
 Route::get('/feed/give', [FeedController::class, 'beriPakan']);
 Route::get('/feed/give/{id}', [FeedController::class, 'beriPakanTerjadwal']);
+Route::get('/feed/status', [FeedController::class, 'checkFeedStatus']);
 Route::get('/sensor-data/latest', [SensorController::class, 'latest']);
 Route::post('/sensor-data/insert', [SensorController::class, 'store']);
