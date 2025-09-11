@@ -37,6 +37,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/jadwal', [MainController::class, 'jadwal']);
     Route::get('/riwayat/sensor', [MainController::class, 'riwayatSensor']);
     Route::get('/riwayat/pakan', [MainController::class, 'riwayatPakan']);
+    Route::get('/preview', [MainController::class, 'preview']);
 
     Route::post('/beri-pakan', [FeedController::class, 'beriPakan']);
 
@@ -48,4 +49,3 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/pond/update/{id}', [PondController::class, 'update']);
     Route::delete('/pond/delete/{id}', [PondController::class, 'destroy']);
 });
-

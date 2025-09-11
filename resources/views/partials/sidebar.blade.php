@@ -70,6 +70,15 @@
                 </div>
             </li>
             <li class="nav-item">
+                <a class="nav-link {{ $active == 'preview' ? 'active' : '' }}" href="{{ url('/preview') }}">
+                    <div
+                        class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
+                        <i class="fas fa-eye text-dark text-sm opacity-10"></i>
+                    </div>
+                    <span class="nav-link-text ms-1">Preview Aplikasi</span>
+                </a>
+            </li>
+            <li class="nav-item">
                 <a href="{{ asset('aplikasi/COTA v1.2.1.apk') }}" download
                 class="nav-link btn btn-primary bg-primary d-flex align-items-center">
                     <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">

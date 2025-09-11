@@ -88,4 +88,10 @@ class MainController extends Controller
             'ponds' =>  Pond::where('user_id', $idUser)->get()
         ]);
     }
+    public function preview()
+    {
+        return view('preview', [
+            'active' => 'preview',
+        ]);
+    }
 }
