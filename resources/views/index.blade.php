@@ -75,14 +75,10 @@
                             <div class="row">
                                 <div class="col-8">
                                     <div class="numbers">
-                                        <p class="text-sm mb-0 text-uppercase font-weight-bold">Pakan Otomatis</p>
+                                        <p class="text-sm mb-0 text-uppercase font-weight-bold">Pakan Manual</p>
                                         <div class="form-check form-switch mt-2 ps-0">
-                                            <form action="{{ url('/beri-pakan') }}" method="POST"
-                                                class="my-0 py-0 me-auto">
-                                                @csrf
-                                                <button type="submit" class="py-1 my-0 rounded-pill btn btn-primary">Beri
-                                                    Pakan</button>
-                                            </form>
+                                            <button type="button" id="beriPakanBtn" class="py-1 my-0 rounded-pill btn btn-primary">Beri
+                                                Pakan</button>
                                             {{-- <input class="form-check-input" type="checkbox" id="pakanToggle"
                                                 {{ $feed->status === 'ON' ? 'checked' : '' }}> --}}
                                         </div>
@@ -180,4 +176,110 @@
     </script>
 
     // {{-- end script post feed & sweetalert --}}
+
+    // {{-- Script untuk beri pakan manual dengan konfirmasi --}}
+    <script>
+        document.getElementById('beriPakanBtn').addEventListener('click', function() {
+            Swal.fire({
+                title: 'Konfirmasi Pemberian Pakan',
+                text: 'Apakah Anda yakin ingin memberikan pakan secara manual?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Ya, Beri Pakan!',
+                cancelButtonText: 'Batal',
+                showLoaderOnConfirm: true,
+                preConfirm: () => {
+                    return fetch('/beri-pakan', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        }
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.status === 'success') {
+                            // Tutup modal konfirmasi
+                            Swal.close();
+                            
+                            // Tampilkan notifikasi loading
+                            showNotification('Mengirim perintah pakan...', 'info');
+                            
+                            // Mulai polling untuk mengecek status MQTT response
+                            checkFeedStatus();
+                            
+                            return data;
+                        } else {
+                            throw new Error(data.message || 'Terjadi kesalahan');
+                        }
+                    })
+                    .catch(error => {
+                        Swal.showValidationMessage(`Request failed: ${error.message}`);
+                    });
+                },
+                allowOutsideClick: () => !Swal.isLoading()
+            });
+        });
+
+        // Fungsi untuk mengecek status MQTT response
+        function checkFeedStatus() {
+            let attempts = 0;
+            const maxAttempts = 20; // Maksimal 20 kali cek (20 detik)
+            
+            const pollStatus = () => {
+                attempts++;
+                
+                fetch('/api/feed/status')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            showNotification(data.message, 'success');
+                        } else if (data.status === 'pending' && attempts < maxAttempts) {
+                            // Lanjutkan polling
+                            setTimeout(pollStatus, 1000);
+                        } else if (attempts >= maxAttempts) {
+                            showNotification('Timeout: Tidak ada konfirmasi dari device', 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error checking feed status:', error);
+                        showNotification('Error: Gagal mengecek status', 'error');
+                    });
+            };
+            
+            // Mulai polling setelah 2 detik
+            setTimeout(pollStatus, 2000);
+        }
+
+        // Fungsi untuk menampilkan floating notification
+        function showNotification(message, type = 'info') {
+            // Buat elemen notification
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type === 'success' ? 'success' : type === 'error' ? 'danger' : 'info'} alert-dismissible fade show position-fixed`;
+            notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);';
+            
+            notification.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'} me-2"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            
+            // Tambahkan ke body
+            document.body.appendChild(notification);
+            
+            // Auto remove setelah 5 detik
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+    </script>
 @endsection
