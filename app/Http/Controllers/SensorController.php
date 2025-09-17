@@ -178,11 +178,11 @@ class SensorController extends Controller
         if ($granularity === 'minute') {
             // Aggregation: average per minute within window
             // Use created_at truncated to minute
-            $timeSelect = DB::raw("DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:00') as waktu");
-            $selects = [$timeSelect, DB::raw('AVG(keasaman) as keasaman'), DB::raw('AVG(kekeruhan) as kekeruhan'), DB::raw('AVG(suhu) as suhu')];
-            $aggQuery = $query->cloneWithout(['columns', 'orders'])->select($selects)
-                ->groupBy(DB::raw("DATE_FORMAT(created_at, '%Y-%m-%d %H:%i')"))
-                ->orderBy(DB::raw("MIN(created_at)"), $order);
+            $timeExpr = "DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:00')";
+            $aggQuery = $query->cloneWithout(['columns', 'orders'])
+                ->selectRaw("$timeExpr as waktu, AVG(keasaman) as keasaman, AVG(kekeruhan) as kekeruhan, AVG(suhu) as suhu")
+                ->groupByRaw($timeExpr)
+                ->orderByRaw("$timeExpr $order");
 
             // Apply limit + 1 to detect has_more
             $rows = $aggQuery->limit($limit + 1)->get();
@@ -218,9 +218,9 @@ class SensorController extends Controller
             if ($lastModified) {
                 $ifNoneMatch = $request->headers->get('If-None-Match');
                 $ifModifiedSince = $request->headers->get('If-Modified-Since');
-                if (($ifNoneMatch && $etag && trim($ifNoneMatch, '"') === $etag) || ($ifModifiedSince && $ifModifiedSince === $lastModified)) {
+                if (($ifNoneMatch && $etag && trim($ifNoneMatch, '\"') === $etag) || ($ifModifiedSince && $ifModifiedSince === $lastModified)) {
                     return response('', 304)->withHeaders(array_filter([
-                        'ETag' => $etag ? '"' . $etag . '"' : null,
+                        'ETag' => $etag ? '\"' . $etag . '\"' : null,
                         'Last-Modified' => $lastModified,
                     ]));
                 }
@@ -237,7 +237,7 @@ class SensorController extends Controller
                     'has_more' => $hasMore,
                 ]
             ])->withHeaders(array_filter([
-                'ETag' => isset($etag) && $etag ? '"' . $etag . '"' : null,
+                'ETag' => isset($etag) && $etag ? '\"' . $etag . '\"' : null,
                 'Last-Modified' => $lastModified,
             ]));
         }
