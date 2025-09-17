@@ -17,6 +17,8 @@ class FeedExecutionResource extends JsonResource
         return [
             'status' => $this->status,
             'waktu_eksekusi' => $this->executed_at->format('Y-m-d H:i:s'),
+            'created_at' => $this->created_at ? $this->created_at->format('Y-m-d H:i:s') : null,
+            'updated_at' => $this->updated_at ? $this->updated_at->format('Y-m-d H:i:s') : null,
         ];
     }
 }
