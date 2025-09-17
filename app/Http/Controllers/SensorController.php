@@ -211,7 +211,13 @@ class SensorController extends Controller
 
             // Caching headers based on latest record in window
             $latestRecord = (clone $query)->orderBy('created_at', 'desc')->first();
-            $lastModified = $latestRecord ? $latestRecord->created_at->toRfc7231String() : null;
+            $lastModified = null;
+            if ($latestRecord && $latestRecord->created_at) {
+                $createdAt = $latestRecord->created_at;
+                if ($createdAt instanceof \DateTimeInterface) {
+                    $lastModified = $createdAt->format('D, d M Y H:i:s \G\M\T'); // RFC7231
+                }
+            }
             $etag = $latestRecord ? md5(($from ?? '') . '|' . ($to ?? '') . '|' . ($minutes ?? '') . '|' . ($rows->first()['waktu'] ?? '') . '|' . ($rows->last()['waktu'] ?? '')) : null;
 
             // 304 handling
@@ -271,15 +277,21 @@ class SensorController extends Controller
 
         // Caching headers
         $latestRecord = (clone $query)->cloneWithout(['columns', 'limit', 'offset', 'orders'])->orderBy('created_at', 'desc')->first();
-        $lastModified = $latestRecord ? $latestRecord->created_at->toRfc7231String() : null;
+        $lastModified = null;
+        if ($latestRecord && $latestRecord->created_at) {
+            $createdAt = $latestRecord->created_at;
+            if ($createdAt instanceof \DateTimeInterface) {
+                $lastModified = $createdAt->format('D, d M Y H:i:s \G\M\T');
+            }
+        }
         $etag = $latestRecord ? md5(($from ?? '') . '|' . ($to ?? '') . '|' . ($minutes ?? '') . '|' . ($data[0]['waktu'] ?? '') . '|' . ($data[count($data)-1]['waktu'] ?? '')) : null;
 
         if ($lastModified) {
             $ifNoneMatch = $request->headers->get('If-None-Match');
             $ifModifiedSince = $request->headers->get('If-Modified-Since');
-            if (($ifNoneMatch && $etag && trim($ifNoneMatch, '"') === $etag) || ($ifModifiedSince && $ifModifiedSince === $lastModified)) {
+            if (($ifNoneMatch && $etag && trim($ifNoneMatch, '\"') === $etag) || ($ifModifiedSince && $ifModifiedSince === $lastModified)) {
                 return response('', 304)->withHeaders(array_filter([
-                    'ETag' => $etag ? '"' . $etag . '"' : null,
+                    'ETag' => $etag ? '\"' . $etag . '\"' : null,
                     'Last-Modified' => $lastModified,
                 ]));
             }
@@ -296,7 +308,7 @@ class SensorController extends Controller
                 'has_more' => $hasMore,
             ]
         ], 200)->withHeaders(array_filter([
-            'ETag' => isset($etag) && $etag ? '"' . $etag . '"' : null,
+            'ETag' => isset($etag) && $etag ? '\"' . $etag . '\"' : null,
             'Last-Modified' => $lastModified,
         ]));
     }
