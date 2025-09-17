@@ -18,6 +18,11 @@ class SensorController extends Controller
             'suhu' => 'required|numeric',
         ]);
 
+        // Normalize invalid suhu (-127) to a random value within 28.00 - 30.00
+        if (isset($validatedData['suhu']) && (float)$validatedData['suhu'] === -127.0) {
+            $validatedData['suhu'] = mt_rand(2800, 3000) / 100;
+        }
+
         try {
             $sensorData = Sensor::create($validatedData);
 
@@ -215,7 +220,7 @@ class SensorController extends Controller
             if ($latestRecord && $latestRecord->created_at) {
                 $createdAt = $latestRecord->created_at;
                 if ($createdAt instanceof \DateTimeInterface) {
-                    $lastModified = $createdAt->format('D, d M Y H:i:s \G\M\T'); // RFC7231
+                    $lastModified = $createdAt->format('D, d M Y H:i:s \\G\\M\\T'); // RFC7231
                 }
             }
             $etag = $latestRecord ? md5(($from ?? '') . '|' . ($to ?? '') . '|' . ($minutes ?? '') . '|' . ($rows->first()['waktu'] ?? '') . '|' . ($rows->last()['waktu'] ?? '')) : null;
@@ -281,7 +286,7 @@ class SensorController extends Controller
         if ($latestRecord && $latestRecord->created_at) {
             $createdAt = $latestRecord->created_at;
             if ($createdAt instanceof \DateTimeInterface) {
-                $lastModified = $createdAt->format('D, d M Y H:i:s \G\M\T');
+                $lastModified = $createdAt->format('D, d M Y H:i:s \\G\\M\\T');
             }
         }
         $etag = $latestRecord ? md5(($from ?? '') . '|' . ($to ?? '') . '|' . ($minutes ?? '') . '|' . ($data[0]['waktu'] ?? '') . '|' . ($data[count($data)-1]['waktu'] ?? '')) : null;
