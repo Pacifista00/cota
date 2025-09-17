@@ -174,6 +174,8 @@ class FeedController extends Controller
                     'status' => 'success',
                     'message' => 'Pakan berhasil diberikan!',
                     'executed_at' => $lastExecution->executed_at
+                        ? $lastExecution->executed_at->timezone('Asia/Jakarta')->toIso8601String()
+                        : null
                 ]);
             } else {
                 return response()->json([
