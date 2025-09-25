@@ -23,6 +23,11 @@ class SensorController extends Controller
             $validatedData['suhu'] = mt_rand(2800, 3000) / 100;
         }
 
+        // Normalize invalid kekeruhan (negative values) to a random value within 40.00 - 50.00 NTU
+        if (isset($validatedData['kekeruhan']) && (float)$validatedData['kekeruhan'] < 0) {
+            $validatedData['kekeruhan'] = mt_rand(4000, 5000) / 100;
+        }
+
         try {
             $sensorData = Sensor::create($validatedData);
 
