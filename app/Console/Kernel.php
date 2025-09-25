@@ -2,6 +2,7 @@
 
 namespace App\Console;
 
+use App\Jobs\ProcessMissingSensorData;
 use App\Models\FeedSchedule;
 use Carbon\Carbon;
 use Illuminate\Console\Scheduling\Schedule;
@@ -23,6 +24,12 @@ class Kernel extends ConsoleKernel
             // jalankan command pada jam & menit sesuai jadwal
             $schedule->command('feed:give')->cron("{$time->minute} {$time->hour} * * *");
         }
+
+        // Sensor fallback mechanism - check for missing data every minute
+        $schedule->job(new ProcessMissingSensorData())
+                 ->everyMinute()
+                 ->name('process-missing-sensor-data')
+                 ->withoutOverlapping(2); // Prevent overlapping runs (2 minute timeout)
     }
 
     /**

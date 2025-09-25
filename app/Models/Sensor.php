@@ -9,5 +9,12 @@ class Sensor extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['kekeruhan', 'keasaman', 'suhu'];
+    protected $fillable = [
+        'kekeruhan',
+        'keasaman',
+        'suhu',
+        'data_source',
+        'is_estimated',
+        'reading_timestamp'
+    ];
 }

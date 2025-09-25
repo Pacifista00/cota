@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Sensor;
 use App\Http\Resources\SensorResource;
+use App\Services\SensorDataService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Carbon;
 
@@ -16,6 +17,7 @@ class SensorController extends Controller
             'kekeruhan' => 'required|numeric',
             'keasaman' => 'required|numeric',
             'suhu' => 'required|numeric',
+            'reading_timestamp' => 'sometimes|date', // Optional for delayed data
         ]);
 
         // Normalize invalid suhu (-127) to a random value within 28.00 - 30.00
@@ -27,6 +29,33 @@ class SensorController extends Controller
         if (isset($validatedData['kekeruhan']) && (float)$validatedData['kekeruhan'] < 0) {
             $validatedData['kekeruhan'] = mt_rand(4000, 5000) / 100;
         }
+
+        // Handle delayed data scenario
+        if (isset($validatedData['reading_timestamp'])) {
+            $readingTime = Carbon::parse($validatedData['reading_timestamp']);
+            $delayMinutes = $readingTime->diffInMinutes(Carbon::now());
+
+            if ($delayMinutes > 1) { // Consider as delayed if > 1 minute
+                $sensorDataService = new SensorDataService();
+                $sensorDataService->handleDelayedData([
+                    'kekeruhan' => $validatedData['kekeruhan'],
+                    'keasaman' => $validatedData['keasaman'],
+                    'suhu' => $validatedData['suhu'],
+                ], $readingTime);
+
+                return response()->json([
+                    'message' => 'Data sensor delay berhasil diproses!',
+                    'status' => 201,
+                    'delay_minutes' => $delayMinutes,
+                    'handling_strategy' => $delayMinutes > 5 ? 'backfilled' : 'replaced_fallback'
+                ], 201);
+            }
+        }
+
+        // Set additional fields for real-time data
+        $validatedData['data_source'] = 'REAL_TIME';
+        $validatedData['is_estimated'] = false;
+        $validatedData['reading_timestamp'] = $validatedData['reading_timestamp'] ?? now();
 
         try {
             $sensorData = Sensor::create($validatedData);
@@ -321,5 +350,33 @@ class SensorController extends Controller
             'ETag' => isset($etag) && $etag ? '\"' . $etag . '\"' : null,
             'Last-Modified' => $lastModified,
         ]));
+    }
+
+    /**
+     * Get data quality statistics
+     */
+    public function dataQuality(Request $request)
+    {
+        $request->validate([
+            'start_date' => 'sometimes|date',
+            'end_date' => 'sometimes|date|after_or_equal:start_date',
+        ]);
+
+        $sensorDataService = new SensorDataService();
+
+        $startDate = $request->start_date ? Carbon::parse($request->start_date) : null;
+        $endDate = $request->end_date ? Carbon::parse($request->end_date) : null;
+
+        $stats = $sensorDataService->getDataQualityStats($startDate, $endDate);
+
+        return response()->json([
+            'message' => 'Data quality statistics retrieved successfully.',
+            'status' => 200,
+            'data' => $stats,
+            'period' => [
+                'start_date' => $startDate?->toDateString(),
+                'end_date' => $endDate?->toDateString(),
+            ]
+        ], 200);
     }
 }
