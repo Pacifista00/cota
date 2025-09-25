@@ -51,3 +51,4 @@ Route::get('/feed/give/{id}', [FeedController::class, 'beriPakanTerjadwal']);
 Route::get('/feed/status', [FeedController::class, 'checkFeedStatus']);
 Route::get('/sensor-data/latest', [SensorController::class, 'latest']);
 Route::post('/sensor-data/insert', [SensorController::class, 'store']);
+Route::get('/sensor-data/quality', [SensorController::class, 'dataQuality']);
