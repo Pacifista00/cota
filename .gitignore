@@ -16,3 +16,13 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
+
+
+#Ignore cursor AI rules
+.cursor/
+
+# Ignore claude AI rules
+.claude/
+
+# Ignore codacy
+.codacy/

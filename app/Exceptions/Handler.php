@@ -46,16 +46,25 @@ class Handler extends ExceptionHandler
             //
         });
     }
+    /**
+     * Convert an authentication exception into a response.
+     * 
+     * Untuk API: Return JSON 401 (mobile app auto logout & clear token)
+     * Untuk Web: Redirect ke login page
+     */
     protected function unauthenticated($request, AuthenticationException $exception)
     {
-        if ($request->expectsJson()) {
+        // Untuk API request (mobile app)
+        if ($request->expectsJson() || $request->is('api/*')) {
             return response()->json([
+                'success' => false,
                 'message' => 'Unauthenticated.',
+                'error' => 'Token is invalid or has expired. Please login again.',
                 'status' => 401
             ], 401);
         }
 
-        // Untuk web redirect ke halaman login
+        // Untuk web request, redirect ke halaman login
         return redirect()->guest(route('login'));
     }
 }
