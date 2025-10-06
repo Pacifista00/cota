@@ -238,40 +238,79 @@
         }
     </script>
     <script>
+        // Fungsi untuk mengecek status MQTT response untuk scheduled feeds
+        function checkScheduledFeedStatus(jadwalId) {
+            let attempts = 0;
+            const maxAttempts = 20; // Maksimal 20 kali cek (20 detik)
+            
+            const pollStatus = () => {
+                attempts++;
+                const waktuSekarang = new Date().toLocaleTimeString();
+                
+                fetch('/api/feed/status')
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log(`[${waktuSekarang}] Status polling (attempt ${attempts}) untuk jadwal ID ${jadwalId}:`, data);
+                        
+                        if (data.status === 'success') {
+                            console.log(`[${waktuSekarang}] ✅ Jadwal ID ${jadwalId} berhasil dieksekusi!`);
+                        } else if (data.status === 'pending' && attempts < maxAttempts) {
+                            // Lanjutkan polling
+                            setTimeout(pollStatus, 1000);
+                        } else if (attempts >= maxAttempts) {
+                            console.warn(`[${waktuSekarang}] ⚠️ Timeout untuk jadwal ID ${jadwalId}`);
+                        }
+                    })
+                    .catch(error => {
+                        console.error(`[${waktuSekarang}] Error checking feed status untuk jadwal ID ${jadwalId}:`, error);
+                    });
+            };
+            
+            // Mulai polling setelah 2 detik
+            setTimeout(pollStatus, 2000);
+        }
+
+        // Polling untuk mengecek jadwal yang siap dieksekusi
         setInterval(() => {
-    const waktuSekarang = new Date().toLocaleTimeString();
-    console.log(`[${waktuSekarang}] Cek jadwal siap jalan...`);
+            const waktuSekarang = new Date().toLocaleTimeString();
+            console.log(`[${waktuSekarang}] Cek jadwal siap jalan...`);
 
-    fetch('/api/feed/ready',{headers: {
-            "Accept": "application/json"
-        }})
-        .then(res => res.json())
-        .then(data => {
-            console.log(`[${waktuSekarang}] Response dari /api/feed/ready:`, data);
+            fetch('/api/feed/ready', {
+                headers: {
+                    "Accept": "application/json"
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                console.log(`[${waktuSekarang}] Response dari /api/feed/ready:`, data);
 
-            if (data.length > 0) {
-                data.forEach(jadwal => {
-                    console.log(`[${waktuSekarang}] Menjalankan jadwal ID: ${jadwal.id}, Waktu: ${jadwal.waktu_pakan}`);
+                if (data.length > 0) {
+                    data.forEach(jadwal => {
+                        console.log(`[${waktuSekarang}] Menjalankan jadwal ID: ${jadwal.id}, Waktu: ${jadwal.waktu_pakan}`);
 
-                    fetch('/api/feed/give/' + jadwal.id)
-                        .then(res => res.json())
-                        .then(result => {
-                            console.log(`[${waktuSekarang}] Hasil eksekusi jadwal ID ${jadwal.id}:`, result);
-                        })
-                        .catch(err => {
-                            console.error(`[${waktuSekarang}] ERROR eksekusi jadwal ID ${jadwal.id}:`, err);
-                        });
-                });
-            } else {
-                console.log(`[${waktuSekarang}] Tidak ada jadwal yang siap jalan.`);
-            }
-        })
-        .catch(err => {
-            console.error(`[${waktuSekarang}] ERROR saat cek jadwal:`, err);
-        });
+                        fetch('/api/feed/give/' + jadwal.id)
+                            .then(res => res.json())
+                            .then(result => {
+                                console.log(`[${waktuSekarang}] Hasil eksekusi jadwal ID ${jadwal.id}:`, result);
+                                
+                                // Mulai polling status setelah eksekusi
+                                if (result.status === 'success') {
+                                    checkScheduledFeedStatus(jadwal.id);
+                                }
+                            })
+                            .catch(err => {
+                                console.error(`[${waktuSekarang}] ERROR eksekusi jadwal ID ${jadwal.id}:`, err);
+                            });
+                    });
+                } else {
+                    console.log(`[${waktuSekarang}] Tidak ada jadwal yang siap jalan.`);
+                }
+            })
+            .catch(err => {
+                console.error(`[${waktuSekarang}] ERROR saat cek jadwal:`, err);
+            });
 
-}, 3000);
-
+        }, 3000);
     </script>
 
     <!-- Github buttons -->
