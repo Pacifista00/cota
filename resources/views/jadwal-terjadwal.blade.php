@@ -457,7 +457,7 @@ Swal.fire({
 });
 @endif
 
-@if($errors - > any())
+@if($errors -> any())
 Swal.fire({
     icon: 'error',
     title: 'Validasi Gagal',
