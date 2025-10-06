@@ -93,7 +93,14 @@ class FeedSchedulingService
      */
     public function getReadySchedules(): \Illuminate\Database\Eloquent\Collection
     {
-        return FeedSchedule::readyToExecute()->get();
+        $schedules = FeedSchedule::readyToExecute()->get();
+
+        Log::info("Ready schedules retrieved", [
+            'count' => $schedules->count(),
+            'schedule_ids' => $schedules->pluck('id')->toArray(),
+        ]);
+
+        return $schedules;
     }
 
     /**
@@ -101,8 +108,23 @@ class FeedSchedulingService
      */
     public function executeFeed(FeedSchedule $schedule): array
     {
+        Log::info("Attempting to execute feed schedule", [
+            'schedule_id' => $schedule->id,
+            'schedule_name' => $schedule->name ?? "Schedule #{$schedule->id}",
+            'scheduled_time' => $schedule->waktu_pakan,
+            'current_time' => Carbon::now()->format('H:i:s'),
+        ]);
+
         // Check if schedule is valid
         if (!$schedule->isValid()) {
+            Log::warning("Feed schedule is not valid", [
+                'schedule_id' => $schedule->id,
+                'is_active' => $schedule->is_active,
+                'start_date' => $schedule->start_date?->format('Y-m-d'),
+                'end_date' => $schedule->end_date?->format('Y-m-d'),
+                'current_date' => Carbon::today()->format('Y-m-d'),
+            ]);
+
             return [
                 'success' => false,
                 'message' => 'Jadwal tidak aktif atau sudah melewati masa berlaku.',
@@ -111,6 +133,11 @@ class FeedSchedulingService
 
         // Check if already executed today
         if ($schedule->wasExecutedToday()) {
+            Log::info("Feed schedule already executed today", [
+                'schedule_id' => $schedule->id,
+                'last_executed_at' => $schedule->last_executed_at?->format('Y-m-d H:i:s'),
+            ]);
+
             return [
                 'success' => false,
                 'message' => 'Jadwal ini sudah dieksekusi hari ini.',
@@ -118,6 +145,8 @@ class FeedSchedulingService
         }
 
         return DB::transaction(function () use ($schedule) {
+            $startTime = microtime(true);
+
             try {
                 // Send MQTT command
                 $this->sendMqttFeedCommand();
@@ -133,10 +162,16 @@ class FeedSchedulingService
                 // Mark schedule as executed
                 $schedule->markAsExecuted();
 
+                $executionTime = round((microtime(true) - $startTime) * 1000, 2);
+
                 // Log success
                 Log::info("Feed schedule executed successfully", [
                     'schedule_id' => $schedule->id,
+                    'schedule_name' => $schedule->name ?? "Schedule #{$schedule->id}",
                     'execution_id' => $execution->id,
+                    'scheduled_time' => $schedule->waktu_pakan,
+                    'actual_execution_time' => Carbon::now()->format('H:i:s'),
+                    'execution_time_ms' => $executionTime,
                 ]);
 
                 return [
@@ -145,10 +180,15 @@ class FeedSchedulingService
                     'execution' => $execution,
                 ];
             } catch (Exception $e) {
+                $executionTime = round((microtime(true) - $startTime) * 1000, 2);
+
                 // Log error
                 Log::error("Failed to execute feed schedule", [
                     'schedule_id' => $schedule->id,
+                    'schedule_name' => $schedule->name ?? "Schedule #{$schedule->id}",
                     'error' => $e->getMessage(),
+                    'error_trace' => $e->getTraceAsString(),
+                    'execution_time_ms' => $executionTime,
                 ]);
 
                 // Create failed execution record
@@ -240,19 +280,56 @@ class FeedSchedulingService
     private function sendMqttFeedCommand(): void
     {
         $clientId = 'laravel-client-' . rand();
+        $startTime = microtime(true);
 
-        // Configure MQTT connection
-        $connectionSettings = (new ConnectionSettings)
-            ->setUseTls(true)
-            ->setTlsSelfSignedAllowed(true)
-            ->setUsername(self::MQTT_USERNAME)
-            ->setPassword(self::MQTT_PASSWORD);
+        Log::info("Attempting MQTT connection", [
+            'server' => self::MQTT_SERVER,
+            'port' => self::MQTT_PORT,
+            'client_id' => $clientId,
+            'topic' => self::MQTT_TOPIC,
+        ]);
 
-        // Connect and publish
-        $mqtt = new MqttClient(self::MQTT_SERVER, self::MQTT_PORT, $clientId);
-        $mqtt->connect($connectionSettings, true);
-        $mqtt->publish(self::MQTT_TOPIC, 'FEED', MqttClient::QOS_AT_LEAST_ONCE);
-        $mqtt->disconnect();
+        try {
+            // Configure MQTT connection
+            $connectionSettings = (new ConnectionSettings)
+                ->setUseTls(true)
+                ->setTlsSelfSignedAllowed(true)
+                ->setUsername(self::MQTT_USERNAME)
+                ->setPassword(self::MQTT_PASSWORD);
+
+            // Connect and publish
+            $mqtt = new MqttClient(self::MQTT_SERVER, self::MQTT_PORT, $clientId);
+            $mqtt->connect($connectionSettings, true);
+
+            Log::debug("MQTT connected successfully", [
+                'client_id' => $clientId,
+            ]);
+
+            $mqtt->publish(self::MQTT_TOPIC, 'FEED', MqttClient::QOS_AT_LEAST_ONCE);
+
+            $mqtt->disconnect();
+
+            $executionTime = round((microtime(true) - $startTime) * 1000, 2);
+
+            Log::info("MQTT feed command sent successfully", [
+                'client_id' => $clientId,
+                'topic' => self::MQTT_TOPIC,
+                'message' => 'FEED',
+                'execution_time_ms' => $executionTime,
+            ]);
+        } catch (Exception $e) {
+            $executionTime = round((microtime(true) - $startTime) * 1000, 2);
+
+            Log::error("MQTT connection or publish failed", [
+                'client_id' => $clientId,
+                'server' => self::MQTT_SERVER,
+                'port' => self::MQTT_PORT,
+                'error' => $e->getMessage(),
+                'execution_time_ms' => $executionTime,
+            ]);
+
+            throw $e;
+        }
     }
 
     /**
@@ -302,11 +379,59 @@ class FeedSchedulingService
     public function deactivateExpiredSchedules(): int
     {
         $today = Carbon::today();
-        
+
         return FeedSchedule::active()
             ->whereNotNull('end_date')
             ->where('end_date', '<', $today)
             ->update(['is_active' => false]);
+    }
+
+    /**
+     * Get schedules that should have run but were missed
+     */
+    public function getMissedSchedules(int $catchupWindowHours = 2): \Illuminate\Database\Eloquent\Collection
+    {
+        $now = Carbon::now();
+        $today = $now->toDateString();
+        $catchupTime = $now->copy()->subHours($catchupWindowHours);
+
+        return FeedSchedule::shouldRunToday()
+            ->whereTime('waktu_pakan', '>=', $catchupTime->format('H:i:s'))
+            ->whereTime('waktu_pakan', '<=', $now->format('H:i:s'))
+            ->where(function ($q) use ($today) {
+                $q->whereNull('last_executed_at')
+                    ->orWhereDate('last_executed_at', '<>', $today);
+            })
+            ->get();
+    }
+
+    /**
+     * Execute missed schedules with logging
+     */
+    public function executeMissedSchedules(): array
+    {
+        $missedSchedules = $this->getMissedSchedules();
+        $results = [];
+
+        foreach ($missedSchedules as $schedule) {
+            Log::warning("Executing missed schedule", [
+                'schedule_id' => $schedule->id,
+                'scheduled_time' => $schedule->waktu_pakan,
+                'current_time' => Carbon::now()->format('H:i:s'),
+                'delay_minutes' => Carbon::now()->diffInMinutes(
+                    Carbon::parse($schedule->waktu_pakan)
+                ),
+            ]);
+
+            $results[] = [
+                'schedule_id' => $schedule->id,
+                'schedule_name' => $schedule->name ?? "Schedule #{$schedule->id}",
+                'was_missed' => true,
+                'result' => $this->executeFeed($schedule),
+            ];
+        }
+
+        return $results;
     }
 }
 
