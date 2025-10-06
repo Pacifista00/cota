@@ -74,11 +74,48 @@ class MainController extends Controller
             'sensorHistories' => Sensor::orderBy('created_at', 'desc')->paginate(20),
         ]);
     }
-    public function riwayatPakan()
+    public function riwayatPakan(Request $request)
     {
+        // Get filter parameters
+        $status = $request->get('status');
+        $triggerType = $request->get('trigger_type');
+        $perPage = $request->get('per_page', 20);
+
+        // Build query with eager loading to prevent N+1
+        $query = FeedExecution::with('schedule:id,name')
+            ->orderBy('updated_at', 'desc');
+
+        // Apply filters
+        if ($status && $status !== 'all') {
+            $query->where('status', $status);
+        }
+
+        if ($triggerType && $triggerType !== 'all') {
+            $query->where('trigger_type', $triggerType);
+        }
+
+        // Get paginated results
+        $feedHistories = $query->paginate($perPage)->withQueryString();
+
+        // Calculate statistics
+        $statistics = [
+            'total' => FeedExecution::count(),
+            'success' => FeedExecution::successful()->count(),
+            'failed' => FeedExecution::failed()->count(),
+            'pending' => FeedExecution::pending()->count(),
+            'manual' => FeedExecution::manual()->count(),
+            'scheduled' => FeedExecution::scheduled()->count(),
+        ];
+
         return view('riwayat-pakan', [
             'active' => 'riwayat_pakan',
-            'feedHistories' => FeedExecution::orderBy('executed_at', 'desc')->paginate(20),
+            'feedHistories' => $feedHistories,
+            'statistics' => $statistics,
+            'filters' => [
+                'status' => $status,
+                'trigger_type' => $triggerType,
+                'per_page' => $perPage,
+            ],
         ]);
     }
     public function tambak()
