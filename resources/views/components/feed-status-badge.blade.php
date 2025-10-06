@@ -14,8 +14,11 @@
 
     // Get label
     $label = is_object($status) ? $status->label() : ucfirst($statusValue);
+
+    // Build class string explicitly
+    $badgeClass = 'badge badge-sm badge-' . $color;
 @endphp
 
-<span {{ $attributes->merge(['class' => "badge badge-sm badge-{$color}"]) }}>
+<span {{ $attributes->merge(['class' => $badgeClass]) }}>
     {{ $label }}
 </span>

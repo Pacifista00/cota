@@ -17,8 +17,11 @@
 
     // Get config data or default to manual
     $data = $config[$type] ?? $config['manual'];
+
+    // Build class string explicitly
+    $badgeClass = 'badge badge-sm badge-' . $data['color'];
 @endphp
 
-<span {{ $attributes->merge(['class' => "badge badge-sm badge-{$data['color']}"]) }}>
+<span {{ $attributes->merge(['class' => $badgeClass]) }}>
     <i class="ni {{ $data['icon'] }} text-xs"></i> {{ $data['label'] }}
 </span>
