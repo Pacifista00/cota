@@ -15,15 +15,11 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // $schedule->command('inspire')->hourly();
-        $schedules = FeedSchedule::all();
-
-        foreach ($schedules as $feedSchedule) {
-            $time = Carbon::createFromFormat('H:i:s', $feedSchedule->waktu_pakan);
-
-            // jalankan command pada jam & menit sesuai jadwal
-            $schedule->command('feed:give')->cron("{$time->minute} {$time->hour} * * *");
-        }
+        // Execute scheduled feeds every minute
+        $schedule->command('feed:execute-scheduled')
+                 ->everyMinute()
+                 ->name('execute-scheduled-feeds')
+                 ->withoutOverlapping(2); // Prevent overlapping runs (2 minute timeout)
 
         // Sensor fallback mechanism - check for missing data every minute
         $schedule->job(new ProcessMissingSensorData())

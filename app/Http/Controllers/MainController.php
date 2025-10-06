@@ -8,6 +8,7 @@ use App\Models\Feed;
 use App\Models\FeedSchedule;
 use App\Models\FeedExecution;
 use App\Models\Pond;
+use App\Services\FeedSchedulingService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -93,5 +94,158 @@ class MainController extends Controller
         return view('preview', [
             'active' => 'preview',
         ]);
+    }
+
+    /**
+     * Jadwal Terjadwal - Index
+     */
+    public function jadwalTerjadwal()
+    {
+        $userId = auth()->id();
+        
+        // Get all schedules for authenticated user
+        $schedules = FeedSchedule::when($userId, function ($q) use ($userId) {
+            return $q->where('user_id', $userId);
+        })
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Calculate statistics
+        $statistics = [
+            'total' => $schedules->count(),
+            'active' => $schedules->where('is_active', true)->count(),
+            'inactive' => $schedules->where('is_active', false)->count(),
+            'executed_today' => $schedules->filter(function ($schedule) {
+                return $schedule->was_executed_today;
+            })->count(),
+        ];
+
+        return view('jadwal-terjadwal', [
+            'active' => 'jadwal_terjadwal',
+            'schedules' => $schedules,
+            'statistics' => $statistics,
+        ]);
+    }
+
+    /**
+     * Jadwal Terjadwal - Store
+     */
+    public function storeJadwalTerjadwal(Request $request, FeedSchedulingService $service)
+    {
+        $validated = $request->validate([
+            'name' => 'nullable|string|max:255',
+            'description' => 'nullable|string|max:1000',
+            'waktu_pakan' => 'required|date_format:H:i',
+            'start_date' => 'nullable|date|after_or_equal:today',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+        ], [
+            'waktu_pakan.required' => 'Waktu pakan wajib diisi.',
+            'waktu_pakan.date_format' => 'Format waktu harus HH:MM.',
+            'start_date.after_or_equal' => 'Tanggal mulai tidak boleh kurang dari hari ini.',
+            'end_date.after_or_equal' => 'Tanggal selesai harus setelah atau sama dengan tanggal mulai.',
+        ]);
+
+        try {
+            // Convert HH:MM to HH:MM:SS
+            $validated['waktu_pakan'] = $validated['waktu_pakan'] . ':00';
+            $validated['user_id'] = auth()->id();
+            $validated['is_active'] = true;
+            $validated['frequency_type'] = 'daily';
+
+            $service->createSchedule($validated);
+
+            return redirect()->back()->with('success', 'Jadwal pakan berhasil ditambahkan!');
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Gagal menambahkan jadwal: ' . $e->getMessage())
+                ->withInput();
+        }
+    }
+
+    /**
+     * Jadwal Terjadwal - Update
+     */
+    public function updateJadwalTerjadwal(Request $request, $id, FeedSchedulingService $service)
+    {
+        $schedule = FeedSchedule::findOrFail($id);
+
+        // Authorization check
+        if ($schedule->user_id && $schedule->user_id != auth()->id()) {
+            return redirect()->back()->with('error', 'Anda tidak memiliki akses untuk mengubah jadwal ini.');
+        }
+
+        $validated = $request->validate([
+            'name' => 'nullable|string|max:255',
+            'description' => 'nullable|string|max:1000',
+            'waktu_pakan' => 'sometimes|required|date_format:H:i',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+        ], [
+            'waktu_pakan.date_format' => 'Format waktu harus HH:MM.',
+            'end_date.after_or_equal' => 'Tanggal selesai harus setelah atau sama dengan tanggal mulai.',
+        ]);
+
+        try {
+            // Convert HH:MM to HH:MM:SS if waktu_pakan exists
+            if (isset($validated['waktu_pakan'])) {
+                $validated['waktu_pakan'] = $validated['waktu_pakan'] . ':00';
+            }
+
+            $service->updateSchedule($schedule, $validated);
+
+            return redirect()->back()->with('success', 'Jadwal pakan berhasil diperbarui!');
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Gagal memperbarui jadwal: ' . $e->getMessage())
+                ->withInput();
+        }
+    }
+
+    /**
+     * Jadwal Terjadwal - Delete
+     */
+    public function deleteJadwalTerjadwal($id, FeedSchedulingService $service)
+    {
+        $schedule = FeedSchedule::findOrFail($id);
+
+        // Authorization check
+        if ($schedule->user_id && $schedule->user_id != auth()->id()) {
+            return redirect()->back()->with('error', 'Anda tidak memiliki akses untuk menghapus jadwal ini.');
+        }
+
+        try {
+            $service->deleteSchedule($schedule);
+
+            return redirect()->back()->with('success', 'Jadwal pakan berhasil dihapus!');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal menghapus jadwal: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Jadwal Terjadwal - Toggle Active
+     */
+    public function toggleJadwalTerjadwal($id, FeedSchedulingService $service)
+    {
+        $schedule = FeedSchedule::findOrFail($id);
+
+        // Authorization check
+        if ($schedule->user_id && $schedule->user_id != auth()->id()) {
+            return redirect()->back()->with('error', 'Anda tidak memiliki akses untuk mengubah jadwal ini.');
+        }
+
+        try {
+            if ($schedule->is_active) {
+                $service->deactivateSchedule($schedule);
+                $message = 'Jadwal pakan berhasil dinonaktifkan!';
+            } else {
+                $service->activateSchedule($schedule);
+                $message = 'Jadwal pakan berhasil diaktifkan!';
+            }
+
+            return redirect()->back()->with('success', $message);
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal mengubah status jadwal: ' . $e->getMessage());
+        }
     }
 }
