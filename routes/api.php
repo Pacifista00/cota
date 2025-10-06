@@ -36,9 +36,22 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::get('/feed/history', [FeedController::class, 'history']);
 
-    Route::post('/feed-schedule/insert', [FeedScheduleController::class, 'store']);
-    Route::put('/feed-schedule/update/{id}', [FeedScheduleController::class, 'update']);
-    Route::delete('/feed-schedule/delete/{id}', [FeedScheduleController::class, 'destroy']);
+    // Feed Schedule Management Routes
+    Route::prefix('feed-schedule')->group(function () {
+        Route::get('/', [FeedScheduleController::class, 'index']);
+        Route::get('/active', [FeedScheduleController::class, 'active']);
+        Route::get('/{id}', [FeedScheduleController::class, 'show']);
+        Route::post('/create', [FeedScheduleController::class, 'store']);
+        Route::put('/{id}', [FeedScheduleController::class, 'update']);
+        Route::delete('/{id}', [FeedScheduleController::class, 'destroy']);
+        Route::patch('/{id}/activate', [FeedScheduleController::class, 'activate']);
+        Route::patch('/{id}/deactivate', [FeedScheduleController::class, 'deactivate']);
+        
+        // Legacy routes for backward compatibility
+        Route::post('/insert', [FeedScheduleController::class, 'store']);
+        Route::put('/update/{id}', [FeedScheduleController::class, 'update']);
+        Route::delete('/delete/{id}', [FeedScheduleController::class, 'destroy']);
+    });
 
     Route::post('/pond/store', [PondController::class, 'store']);
     Route::put('/pond/update/{id}', [PondController::class, 'update']);
