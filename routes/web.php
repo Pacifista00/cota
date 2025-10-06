@@ -39,6 +39,13 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/riwayat/pakan', [MainController::class, 'riwayatPakan']);
     Route::get('/preview', [MainController::class, 'preview']);
 
+    // Jadwal Terjadwal (Enhanced)
+    Route::get('/jadwal-terjadwal', [MainController::class, 'jadwalTerjadwal']);
+    Route::post('/jadwal-terjadwal/store', [MainController::class, 'storeJadwalTerjadwal']);
+    Route::put('/jadwal-terjadwal/update/{id}', [MainController::class, 'updateJadwalTerjadwal']);
+    Route::delete('/jadwal-terjadwal/delete/{id}', [MainController::class, 'deleteJadwalTerjadwal']);
+    Route::post('/jadwal-terjadwal/toggle/{id}', [MainController::class, 'toggleJadwalTerjadwal']);
+
     Route::post('/beri-pakan', [FeedController::class, 'beriPakan']);
 
     Route::post('/jadwal/store', [FeedScheduleController::class, 'store']);
