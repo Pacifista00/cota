@@ -233,7 +233,17 @@
                                                 </div>
                                             </td>
                                             <td>
-                                                <x-feed-trigger-badge :type="$feedItem->trigger_type" />
+                                                @php
+                                                    // Trigger type badge logic
+                                                    $triggerConfig = [
+                                                        'manual' => ['color' => 'secondary', 'icon' => 'ni-hand-click', 'label' => 'Manual'],
+                                                        'scheduled' => ['color' => 'primary', 'icon' => 'ni-calendar-grid-58', 'label' => 'Terjadwal'],
+                                                    ];
+                                                    $triggerData = $triggerConfig[$feedItem->trigger_type] ?? $triggerConfig['manual'];
+                                                @endphp
+                                                <span class="badge badge-sm badge-{{ $triggerData['color'] }}">
+                                                    <i class="ni {{ $triggerData['icon'] }} text-xs"></i> {{ $triggerData['label'] }}
+                                                </span>
                                             </td>
                                             <td class="align-middle">
                                                 @if($feedItem->schedule)
@@ -245,7 +255,20 @@
                                                 @endif
                                             </td>
                                             <td class="align-middle text-center">
-                                                <x-feed-status-badge :status="$feedItem->status" />
+                                                @php
+                                                    // Status badge logic
+                                                    $statusColors = [
+                                                        'success' => 'success',
+                                                        'failed' => 'danger',
+                                                        'pending' => 'warning',
+                                                    ];
+                                                    $statusValue = is_object($feedItem->status) ? $feedItem->status->value : $feedItem->status;
+                                                    $statusColor = $statusColors[$statusValue] ?? 'secondary';
+                                                    $statusLabel = is_object($feedItem->status) ? $feedItem->status->label() : ucfirst($statusValue);
+                                                @endphp
+                                                <span class="badge badge-sm badge-{{ $statusColor }}">
+                                                    {{ $statusLabel }}
+                                                </span>
                                             </td>
                                         </tr>
                                         @empty
@@ -278,11 +301,34 @@
                                                     {{ $feedItem->updated_at->diffForHumans() }}
                                                 </p>
                                             </div>
-                                            <x-feed-status-badge :status="$feedItem->status" />
+                                            @php
+                                                // Status badge logic - mobile
+                                                $statusColors = [
+                                                    'success' => 'success',
+                                                    'failed' => 'danger',
+                                                    'pending' => 'warning',
+                                                ];
+                                                $statusValue = is_object($feedItem->status) ? $feedItem->status->value : $feedItem->status;
+                                                $statusColor = $statusColors[$statusValue] ?? 'secondary';
+                                                $statusLabel = is_object($feedItem->status) ? $feedItem->status->label() : ucfirst($statusValue);
+                                            @endphp
+                                            <span class="badge badge-sm badge-{{ $statusColor }}">
+                                                {{ $statusLabel }}
+                                            </span>
                                         </div>
                                         <div class="d-flex justify-content-between align-items-center">
                                             <div>
-                                                <x-feed-trigger-badge :type="$feedItem->trigger_type" />
+                                                @php
+                                                    // Trigger type badge logic - mobile
+                                                    $triggerConfig = [
+                                                        'manual' => ['color' => 'secondary', 'icon' => 'ni-hand-click', 'label' => 'Manual'],
+                                                        'scheduled' => ['color' => 'primary', 'icon' => 'ni-calendar-grid-58', 'label' => 'Terjadwal'],
+                                                    ];
+                                                    $triggerData = $triggerConfig[$feedItem->trigger_type] ?? $triggerConfig['manual'];
+                                                @endphp
+                                                <span class="badge badge-sm badge-{{ $triggerData['color'] }}">
+                                                    <i class="ni {{ $triggerData['icon'] }} text-xs"></i> {{ $triggerData['label'] }}
+                                                </span>
                                             </div>
                                             @if($feedItem->schedule)
                                                 <span class="text-xs text-secondary">
