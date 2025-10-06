@@ -53,6 +53,10 @@ class ExecuteScheduledFeeds extends Command
             // Execute ready schedules
             $results = $this->feedSchedulingService->executeReadySchedules();
 
+            // Execute missed schedules (catch-up)
+            $missedResults = $this->feedSchedulingService->executeMissedSchedules();
+            $results = array_merge($results, $missedResults);
+
             if (empty($results)) {
                 $this->info('✅ No schedules ready to execute at this time');
                 return Command::SUCCESS;
@@ -69,16 +73,22 @@ class ExecuteScheduledFeeds extends Command
             foreach ($results as $result) {
                 $success = $result['result']['success'];
                 $status = $success ? '✅ Success' : '❌ Failed';
-                
+
                 if ($success) {
                     $successCount++;
                 } else {
                     $failureCount++;
                 }
 
+                // Add "MISSED" indicator if this was a catch-up execution
+                $scheduleName = $result['schedule_name'];
+                if (isset($result['was_missed']) && $result['was_missed']) {
+                    $scheduleName .= ' (MISSED - Catch-up)';
+                }
+
                 $tableData[] = [
                     $result['schedule_id'],
-                    $result['schedule_name'],
+                    $scheduleName,
                     $status,
                     $result['result']['message'],
                 ];

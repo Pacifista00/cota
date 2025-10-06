@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class FeedSchedule extends Model
@@ -85,12 +86,72 @@ class FeedSchedule extends Model
     public function scopeReadyToExecute($query)
     {
         $now = Carbon::now();
-        $oneMinuteAgo = $now->copy()->subMinute();
         $today = $now->toDateString();
+
+        // Allow execution if:
+        // 1. Time has passed (waktu_pakan <= now)
+        // 2. Not executed today
+        // 3. Within grace period (5 minutes)
+        $gracePeriodMinutes = 5;
+        $maxExecutionTime = $now->copy()->subMinutes($gracePeriodMinutes);
+
+        // Log evaluation details
+        $allSchedules = static::active()->get();
+        foreach ($allSchedules as $schedule) {
+            $reasons = [];
+            $shouldExecute = true;
+
+            // Check if time has not reached yet
+            if ($schedule->waktu_pakan > $now->format('H:i:s')) {
+                $reasons[] = 'time_not_reached';
+                $shouldExecute = false;
+            }
+
+            // Check if outside grace period (too old)
+            if ($schedule->waktu_pakan < $maxExecutionTime->format('H:i:s')) {
+                $reasons[] = 'outside_grace_period';
+                $shouldExecute = false;
+            }
+
+            // Check if already executed today
+            if ($schedule->last_executed_at && $schedule->last_executed_at->isToday()) {
+                $reasons[] = 'already_executed_today';
+                $shouldExecute = false;
+            }
+
+            // Check if outside date range
+            if ($schedule->start_date && $schedule->start_date->gt($today)) {
+                $reasons[] = 'before_start_date';
+                $shouldExecute = false;
+            }
+
+            if ($schedule->end_date && $schedule->end_date->lt($today)) {
+                $reasons[] = 'after_end_date';
+                $shouldExecute = false;
+            }
+
+            // Log the evaluation
+            if ($shouldExecute) {
+                Log::info("Schedule ready to execute", [
+                    'schedule_id' => $schedule->id,
+                    'schedule_name' => $schedule->name ?? "Schedule #{$schedule->id}",
+                    'scheduled_time' => $schedule->waktu_pakan,
+                    'current_time' => $now->format('H:i:s'),
+                ]);
+            } else {
+                Log::debug("Schedule skipped", [
+                    'schedule_id' => $schedule->id,
+                    'schedule_name' => $schedule->name ?? "Schedule #{$schedule->id}",
+                    'scheduled_time' => $schedule->waktu_pakan,
+                    'current_time' => $now->format('H:i:s'),
+                    'reasons' => $reasons,
+                ]);
+            }
+        }
 
         return $query->shouldRunToday()
             ->whereTime('waktu_pakan', '<=', $now->format('H:i:s'))
-            ->whereTime('waktu_pakan', '>=', $oneMinuteAgo->format('H:i:s'))
+            ->whereTime('waktu_pakan', '>=', $maxExecutionTime->format('H:i:s'))
             ->where(function ($q) use ($today) {
                 $q->whereNull('last_executed_at')
                     ->orWhereDate('last_executed_at', '<>', $today);
