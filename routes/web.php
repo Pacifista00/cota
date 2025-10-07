@@ -2,7 +2,6 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MainController;
-use App\Http\Controllers\FeedScheduleController;
 use App\Http\Controllers\FeedController;
 use App\Http\Controllers\AuthWebController;
 use App\Http\Controllers\PondController;
@@ -34,7 +33,6 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/', [MainController::class, 'index']);
     Route::get('/tambak', [MainController::class, 'tambak']);
-    Route::get('/jadwal', [MainController::class, 'jadwal']);
     Route::get('/riwayat/sensor', [MainController::class, 'riwayatSensor']);
     Route::get('/riwayat/pakan', [MainController::class, 'riwayatPakan']);
     Route::get('/preview', [MainController::class, 'preview']);
@@ -47,10 +45,6 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/jadwal-terjadwal/toggle/{id}', [MainController::class, 'toggleJadwalTerjadwal']);
 
     Route::post('/beri-pakan', [FeedController::class, 'beriPakan']);
-
-    Route::post('/jadwal/store', [FeedScheduleController::class, 'store']);
-    Route::put('/jadwal/update/{id}', [FeedScheduleController::class, 'update']);
-    Route::delete('/jadwal/delete/{id}', [FeedScheduleController::class, 'destroy']);
 
     Route::post('/pond/store', [PondController::class, 'store']);
     Route::put('/pond/update/{id}', [PondController::class, 'update']);
