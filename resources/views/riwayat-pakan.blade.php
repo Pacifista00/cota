@@ -241,8 +241,8 @@
                                                     ];
                                                     $triggerData = $triggerConfig[$feedItem->trigger_type] ?? $triggerConfig['manual'];
                                                 @endphp
-                                                <span class="badge badge-sm badge-{{ $triggerData['color'] }}">
-                                                    <i class="ni {{ $triggerData['icon'] }} text-xs"></i> {{ $triggerData['label'] }}
+                                                <span class="badge bg-{{ $triggerData['color'] }} text-white text-xs">
+                                                    <i class="ni {{ $triggerData['icon'] }}"></i> {{ $triggerData['label'] }}
                                                 </span>
                                             </td>
                                             <td class="align-middle">
@@ -266,7 +266,7 @@
                                                     $statusColor = $statusColors[$statusValue] ?? 'secondary';
                                                     $statusLabel = is_object($feedItem->status) ? $feedItem->status->label() : ucfirst($statusValue);
                                                 @endphp
-                                                <span class="badge badge-sm badge-{{ $statusColor }}">
+                                                <span class="badge bg-{{ $statusColor }} text-white text-xs">
                                                     {{ $statusLabel }}
                                                 </span>
                                             </td>
@@ -312,7 +312,7 @@
                                                 $statusColor = $statusColors[$statusValue] ?? 'secondary';
                                                 $statusLabel = is_object($feedItem->status) ? $feedItem->status->label() : ucfirst($statusValue);
                                             @endphp
-                                            <span class="badge badge-sm badge-{{ $statusColor }}">
+                                            <span class="badge bg-{{ $statusColor }} text-white text-xs">
                                                 {{ $statusLabel }}
                                             </span>
                                         </div>
@@ -326,8 +326,8 @@
                                                     ];
                                                     $triggerData = $triggerConfig[$feedItem->trigger_type] ?? $triggerConfig['manual'];
                                                 @endphp
-                                                <span class="badge badge-sm badge-{{ $triggerData['color'] }}">
-                                                    <i class="ni {{ $triggerData['icon'] }} text-xs"></i> {{ $triggerData['label'] }}
+                                                <span class="badge bg-{{ $triggerData['color'] }} text-white text-xs">
+                                                    <i class="ni {{ $triggerData['icon'] }}"></i> {{ $triggerData['label'] }}
                                                 </span>
                                             </div>
                                             @if($feedItem->schedule)
