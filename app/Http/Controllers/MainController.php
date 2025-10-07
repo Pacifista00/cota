@@ -9,6 +9,7 @@ use App\Models\FeedSchedule;
 use App\Models\FeedExecution;
 use App\Models\Pond;
 use App\Services\FeedSchedulingService;
+use App\Services\NotificationService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -271,6 +272,61 @@ class MainController extends Controller
             return redirect()->back()->with('success', $message);
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Gagal mengubah status jadwal: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Notifikasi - Show all notifications
+     */
+    public function notifikasi(NotificationService $notificationService)
+    {
+        $user = auth()->user();
+        $notifications = $notificationService->getUserNotifications($user, 100);
+        $unreadCount = $notificationService->getUnreadCount($user);
+
+        return view('notifikasi', [
+            'active' => 'notifikasi',
+            'notifications' => $notifications,
+            'unreadCount' => $unreadCount,
+        ]);
+    }
+
+    /**
+     * Notifikasi - Mark as read (AJAX)
+     */
+    public function markNotificationAsRead(Request $request, $id, NotificationService $notificationService)
+    {
+        try {
+            $notificationService->markAsRead($id);
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Notifikasi - Mark all as read
+     */
+    public function markAllNotificationsAsRead(NotificationService $notificationService)
+    {
+        try {
+            $count = $notificationService->markAllAsRead(auth()->user());
+            return redirect()->back()->with('success', "{$count} notifikasi berhasil ditandai sebagai sudah dibaca.");
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal menandai notifikasi.');
+        }
+    }
+
+    /**
+     * Notifikasi - Delete notification
+     */
+    public function deleteNotification($id, NotificationService $notificationService)
+    {
+        try {
+            $notificationService->deleteNotification($id);
+            return redirect()->back()->with('success', 'Notifikasi berhasil dihapus.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal menghapus notifikasi.');
         }
     }
 }

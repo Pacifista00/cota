@@ -49,4 +49,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/pond/store', [PondController::class, 'store']);
     Route::put('/pond/update/{id}', [PondController::class, 'update']);
     Route::delete('/pond/delete/{id}', [PondController::class, 'destroy']);
+
+    // Notification routes
+    Route::get('/notifikasi', [MainController::class, 'notifikasi']);
+    Route::post('/notifikasi/{id}/mark-as-read', [MainController::class, 'markNotificationAsRead']);
+    Route::post('/notifikasi/mark-all-as-read', [MainController::class, 'markAllNotificationsAsRead']);
+    Route::delete('/notifikasi/{id}', [MainController::class, 'deleteNotification']);
 });
