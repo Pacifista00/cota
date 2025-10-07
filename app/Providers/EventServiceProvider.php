@@ -18,6 +18,9 @@ class EventServiceProvider extends ServiceProvider
         Registered::class => [
             SendEmailVerificationNotification::class,
         ],
+        \App\Events\FeedExecutionCompleted::class => [
+            \App\Listeners\SendFeedExecutionNotification::class,
+        ],
     ];
 
     /**
@@ -25,7 +28,8 @@ class EventServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Register FeedExecution observer
+        \App\Models\FeedExecution::observe(\App\Observers\FeedExecutionObserver::class);
     }
 
     /**

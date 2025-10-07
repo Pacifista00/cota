@@ -7,6 +7,7 @@ use App\Http\Controllers\SensorController;
 use App\Http\Controllers\FeedController;
 use App\Http\Controllers\FeedScheduleController;
 use App\Http\Controllers\PondController;
+use App\Http\Controllers\NotificationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -56,6 +57,16 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/pond/store', [PondController::class, 'store']);
     Route::put('/pond/update/{id}', [PondController::class, 'update']);
     Route::delete('/pond/delete/{id}', [PondController::class, 'destroy']);
+
+    // Notification routes
+    Route::prefix('notifications')->group(function () {
+        Route::get('/', [NotificationController::class, 'index']);
+        Route::get('/unread', [NotificationController::class, 'unread']);
+        Route::get('/statistics', [NotificationController::class, 'statistics']);
+        Route::post('/{id}/mark-as-read', [NotificationController::class, 'markAsRead']);
+        Route::post('/mark-all-as-read', [NotificationController::class, 'markAllAsRead']);
+        Route::delete('/{id}', [NotificationController::class, 'destroy']);
+    });
 });
 
 Route::get('/feed/ready', [FeedController::class, 'siap']);

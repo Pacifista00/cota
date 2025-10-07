@@ -41,6 +41,22 @@
                 </a>
             </li>
             <li class="nav-item">
+                <a class="nav-link {{ $active == 'notifikasi' ? 'active' : '' }}" href="{{ url('/notifikasi') }}">
+                    <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
+                        <i class="ni ni-bell-55 text-dark text-sm opacity-10"></i>
+                    </div>
+                    <span class="nav-link-text ms-1">Notifikasi</span>
+                    @php
+                        $sidebarUnreadCount = auth()->user()->unreadNotifications()->count();
+                    @endphp
+                    @if($sidebarUnreadCount > 0)
+                        <span class="badge badge-sm bg-gradient-danger ms-auto">
+                            {{ $sidebarUnreadCount }}
+                        </span>
+                    @endif
+                </a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link {{ $active == 'riwayat_sensor' || $active == 'riwayat_pakan' ? '' : 'collapsed' }}"
                     data-bs-toggle="collapse" href="#submenuRiwayat" role="button"
                     aria-expanded="{{ $active == 'riwayat_sensor' || $active == 'riwayat_pakan' ? 'true' : 'false' }}"
