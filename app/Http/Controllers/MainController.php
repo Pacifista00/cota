@@ -54,18 +54,6 @@ class MainController extends Controller
             'active' => 'dashboard'
         ]);
     }
-    public function jadwal()
-    {
-        $tanggalHariIni = Carbon::today();
-
-        // Ambil semua jadwal
-        $jadwalList = FeedSchedule::all();
-
-        return view('jadwal', [
-            'active' => 'jadwal',
-            'jadwalList' => $jadwalList
-        ]);
-    }
 
     public function riwayatSensor()
     {
