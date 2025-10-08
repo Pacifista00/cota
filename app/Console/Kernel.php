@@ -21,6 +21,12 @@ class Kernel extends ConsoleKernel
                  ->name('execute-scheduled-feeds')
                  ->withoutOverlapping(2); // Prevent overlapping runs (2 minute timeout)
 
+        // Cleanup pending feed executions (fallback safety net)
+        $schedule->command('feed:cleanup-pending')
+                 ->cron(config('feed.execution.cleanup_schedule', '*/5 * * * *'))
+                 ->name('cleanup-pending-executions')
+                 ->withoutOverlapping(5); // Prevent overlapping runs (5 minute timeout)
+
         // Sensor fallback mechanism - check for missing data every minute
         $schedule->job(new ProcessMissingSensorData())
                  ->everyMinute()

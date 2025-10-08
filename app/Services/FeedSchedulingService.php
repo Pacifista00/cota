@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\FeedExecutionStatus;
+use App\Jobs\UpdateFeedExecutionStatusJob;
 use App\Models\FeedSchedule;
 use App\Models\FeedExecution;
 use Carbon\Carbon;
@@ -22,6 +23,19 @@ class FeedSchedulingService
     private const MQTT_USERNAME = 'anfvrqjy:anfvrqjy';
     private const MQTT_PASSWORD = 'V4OJdwnNv8d8nN2OmCbLrdBqDF5-WS5G';
     private const MQTT_TOPIC = 'cota/command/feed_all';
+
+    /**
+     * The feed status updater service
+     */
+    protected FeedStatusUpdaterService $statusUpdater;
+
+    /**
+     * Create a new service instance.
+     */
+    public function __construct(FeedStatusUpdaterService $statusUpdater)
+    {
+        $this->statusUpdater = $statusUpdater;
+    }
 
     /**
      * Create a new feed schedule
@@ -164,6 +178,25 @@ class FeedSchedulingService
 
                 $executionTime = round((microtime(true) - $startTime) * 1000, 2);
 
+                // Dispatch job to update status after configured delay
+                if (config('feed.execution.enable_auto_status_update', true)) {
+                    $delay = config('feed.execution.status_update_delay', 3);
+                    UpdateFeedExecutionStatusJob::dispatch(
+                        $execution->id,
+                        FeedExecutionStatus::SUCCESS,
+                        [
+                            'update_reason' => 'automatic_scheduled_feed',
+                            'schedule_id' => $schedule->id,
+                            'schedule_name' => $schedule->name ?? "Schedule #{$schedule->id}",
+                        ]
+                    )->delay(now()->addSeconds($delay));
+
+                    Log::info("Status update job dispatched", [
+                        'execution_id' => $execution->id,
+                        'delay_seconds' => $delay,
+                    ]);
+                }
+
                 // Log success
                 Log::info("Feed schedule executed successfully", [
                     'schedule_id' => $schedule->id,
@@ -243,6 +276,23 @@ class FeedSchedulingService
                     'status' => FeedExecutionStatus::PENDING->value,
                     'executed_at' => now(),
                 ]);
+
+                // Dispatch job to update status after configured delay
+                if (config('feed.execution.enable_auto_status_update', true)) {
+                    $delay = config('feed.execution.status_update_delay', 3);
+                    UpdateFeedExecutionStatusJob::dispatch(
+                        $execution->id,
+                        FeedExecutionStatus::SUCCESS,
+                        [
+                            'update_reason' => 'automatic_manual_feed',
+                        ]
+                    )->delay(now()->addSeconds($delay));
+
+                    Log::info("Status update job dispatched for manual feed", [
+                        'execution_id' => $execution->id,
+                        'delay_seconds' => $delay,
+                    ]);
+                }
 
                 Log::info("Manual feed executed successfully", [
                     'execution_id' => $execution->id,
