@@ -3,22 +3,28 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Enums\FeedExecutionStatus;
 use App\Models\Feed;
 use App\Models\FeedSchedule;
 use App\Models\FeedExecution;
 use App\Http\Resources\FeedResource;
 use App\Http\Resources\FeedExecutionResource;
 use App\Services\FeedSchedulingService;
+use App\Services\FeedStatusUpdaterService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Carbon;
 
 class FeedController extends Controller
 {
     protected FeedSchedulingService $feedSchedulingService;
+    protected FeedStatusUpdaterService $statusUpdater;
 
-    public function __construct(FeedSchedulingService $feedSchedulingService)
-    {
+    public function __construct(
+        FeedSchedulingService $feedSchedulingService,
+        FeedStatusUpdaterService $statusUpdater
+    ) {
         $this->feedSchedulingService = $feedSchedulingService;
+        $this->statusUpdater = $statusUpdater;
     }
 
     /**
@@ -119,28 +125,37 @@ class FeedController extends Controller
             ->where('created_at', '>=', now()->subMinutes(5)) // Hanya cek dalam 5 menit terakhir
             ->latest()
             ->first();
-        
+
         if ($lastExecution) {
-            // Simulasi: setelah 3 detik, anggap berhasil
-            if ($lastExecution->created_at->diffInSeconds(now()) >= 3) {
-                // Update status menjadi success
-                $lastExecution->update(['status' => 'success']);
-                
-                return response()->json([
-                    'status' => 'success',
-                    'message' => 'Pakan berhasil diberikan!',
-                    'executed_at' => $lastExecution->executed_at
-                        ? $lastExecution->executed_at->timezone('Asia/Jakarta')->toIso8601String()
-                        : null
-                ]);
-            } else {
-                return response()->json([
-                    'status' => 'pending',
-                    'message' => 'Menunggu konfirmasi dari device...'
-                ]);
+            // Check if execution should be updated using service
+            if ($this->statusUpdater->shouldUpdateExecution($lastExecution)) {
+                // Update status using service
+                $success = $this->statusUpdater->updateExecutionStatus(
+                    $lastExecution,
+                    FeedExecutionStatus::SUCCESS,
+                    [
+                        'update_source' => 'ui_polling',
+                        'endpoint' => 'checkFeedStatus',
+                    ]
+                );
+
+                if ($success) {
+                    return response()->json([
+                        'status' => 'success',
+                        'message' => 'Pakan berhasil diberikan!',
+                        'executed_at' => $lastExecution->executed_at
+                            ? $lastExecution->executed_at->timezone('Asia/Jakarta')->toIso8601String()
+                            : null
+                    ]);
+                }
             }
+
+            return response()->json([
+                'status' => 'pending',
+                'message' => 'Menunggu konfirmasi dari device...'
+            ]);
         }
-        
+
         return response()->json([
             'status' => 'pending',
             'message' => 'Tidak ada perintah pakan yang sedang diproses'
