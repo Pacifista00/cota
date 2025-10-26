@@ -19,6 +19,59 @@
         }
     ],
     "paths": {
+        "/register": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "User Registration",
+                "description": "Register a new user account with email, password, and profile information",
+                "operationId": "0903f2e0df1a8857bee538fc055417f0",
+                "requestBody": {
+                    "description": "User registration data",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RegisterRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Registration successful",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RegisterResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Registration failed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/login": {
             "post": {
                 "tags": [
@@ -69,6 +122,63 @@
                         }
                     }
                 }
+            }
+        },
+        "/logout": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "User Logout",
+                "description": "Invalidate the current user authentication token",
+                "operationId": "68a6108af04af5e3bc1ea68a6c6f1299",
+                "responses": {
+                    "200": {
+                        "description": "Logout successful",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LogoutResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "User not logged in",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UnauthorizedResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Logout failed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
             }
         }
     },
@@ -139,6 +249,93 @@
                                 "description": "Sanctum authentication token",
                                 "type": "string",
                                 "example": "1|abcdefghijklmnopqrstuvwxyz123456"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "LogoutResponse": {
+                "title": "Logout Response",
+                "description": "Successful logout response",
+                "properties": {
+                    "data": {
+                        "properties": {
+                            "message": {
+                                "description": "Response message",
+                                "type": "string",
+                                "example": "Logout berhasil!"
+                            },
+                            "status": {
+                                "description": "HTTP status code",
+                                "type": "integer",
+                                "example": 200
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "RegisterRequest": {
+                "title": "Register Request",
+                "description": "User registration request payload",
+                "required": [
+                    "fullname",
+                    "email",
+                    "no_telepon",
+                    "password",
+                    "password_confirm"
+                ],
+                "properties": {
+                    "fullname": {
+                        "description": "User full name (max 54 characters)",
+                        "type": "string",
+                        "maxLength": 54,
+                        "example": "John Doe"
+                    },
+                    "email": {
+                        "description": "User email address (must be unique)",
+                        "type": "string",
+                        "format": "email",
+                        "example": "john.doe@example.com"
+                    },
+                    "no_telepon": {
+                        "description": "User phone number (must be unique)",
+                        "type": "string",
+                        "example": "+6281234567890"
+                    },
+                    "password": {
+                        "description": "User password",
+                        "type": "string",
+                        "format": "password",
+                        "example": "SecurePassword123"
+                    },
+                    "password_confirm": {
+                        "description": "Password confirmation (must match password)",
+                        "type": "string",
+                        "format": "password",
+                        "example": "SecurePassword123"
+                    }
+                },
+                "type": "object"
+            },
+            "RegisterResponse": {
+                "title": "Register Response",
+                "description": "Successful registration response",
+                "properties": {
+                    "data": {
+                        "properties": {
+                            "message": {
+                                "description": "Response message",
+                                "type": "string",
+                                "example": "Register berhasil!"
+                            },
+                            "status": {
+                                "description": "HTTP status code",
+                                "type": "integer",
+                                "example": 201
                             }
                         },
                         "type": "object"

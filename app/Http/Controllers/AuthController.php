@@ -9,6 +9,34 @@ use OpenApi\Attributes as OA;
 
 class AuthController extends Controller
 {
+    #[OA\Post(
+        path: '/register',
+        summary: 'User Registration',
+        description: 'Register a new user account with email, password, and profile information',
+        tags: ['Authentication'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            description: 'User registration data',
+            content: new OA\JsonContent(ref: '#/components/schemas/RegisterRequest')
+        ),
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: 'Registration successful',
+                content: new OA\JsonContent(ref: '#/components/schemas/RegisterResponse')
+            ),
+            new OA\Response(
+                response: 422,
+                description: 'Validation error',
+                content: new OA\JsonContent(ref: '#/components/schemas/ValidationErrorResponse')
+            ),
+            new OA\Response(
+                response: 500,
+                description: 'Registration failed',
+                content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')
+            ),
+        ]
+    )]
     public function register(Request $request){
         try {
             $request->validate([
@@ -100,6 +128,36 @@ class AuthController extends Controller
             ]
         ],401);
     }
+    
+    #[OA\Post(
+        path: '/logout',
+        summary: 'User Logout',
+        description: 'Invalidate the current user authentication token',
+        security: [['sanctum' => []]],
+        tags: ['Authentication'],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Logout successful',
+                content: new OA\JsonContent(ref: '#/components/schemas/LogoutResponse')
+            ),
+            new OA\Response(
+                response: 400,
+                description: 'User not logged in',
+                content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Unauthorized',
+                content: new OA\JsonContent(ref: '#/components/schemas/UnauthorizedResponse')
+            ),
+            new OA\Response(
+                response: 500,
+                description: 'Logout failed',
+                content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')
+            ),
+        ]
+    )]
     public function logout(Request $request)
     {
         try {
