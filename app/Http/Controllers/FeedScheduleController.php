@@ -10,6 +10,7 @@ use App\Services\FeedSchedulingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use OpenApi\Attributes as OA;
 
 class FeedScheduleController extends Controller
 {
@@ -23,6 +24,25 @@ class FeedScheduleController extends Controller
     /**
      * Display a listing of feed schedules
      */
+    #[OA\Get(
+        path: '/feed-schedule',
+        summary: 'List Feed Schedules',
+        description: 'Get a list of all feed schedules for the authenticated user, including recent execution history',
+        security: [['sanctum' => []]],
+        tags: ['Feed Schedule'],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Feed schedules retrieved successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/FeedScheduleListResponse')
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Unauthorized',
+                content: new OA\JsonContent(ref: '#/components/schemas/UnauthorizedResponse')
+            ),
+        ]
+    )]
     public function index(Request $request): JsonResponse
     {
         $userId = $request->user()->id ?? null;
@@ -45,6 +65,54 @@ class FeedScheduleController extends Controller
     /**
      * Display the specified feed schedule
      */
+    #[OA\Get(
+        path: '/feed-schedule/{id}',
+        summary: 'Get Feed Schedule Details',
+        description: 'Get detailed information about a specific feed schedule including statistics and execution history',
+        security: [['sanctum' => []]],
+        tags: ['Feed Schedule'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                description: 'Feed schedule ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer', example: 1)
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Feed schedule details retrieved successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'Detail jadwal pakan berhasil dimuat.'),
+                        new OA\Property(property: 'status', type: 'integer', example: 200),
+                        new OA\Property(property: 'data', type: 'object'),
+                        new OA\Property(
+                            property: 'statistics',
+                            properties: [
+                                new OA\Property(property: 'total_executions', type: 'integer', example: 30),
+                                new OA\Property(property: 'success_rate', type: 'number', example: 96.7),
+                                new OA\Property(property: 'average_delay', type: 'number', example: 2.5),
+                            ],
+                            type: 'object'
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Feed schedule not found',
+                content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Unauthorized',
+                content: new OA\JsonContent(ref: '#/components/schemas/UnauthorizedResponse')
+            ),
+        ]
+    )]
     public function show(Request $request, $id): JsonResponse
     {
         $schedule = FeedSchedule::with('executions')->findOrFail($id);
@@ -63,6 +131,40 @@ class FeedScheduleController extends Controller
     /**
      * Store a newly created feed schedule
      */
+    #[OA\Post(
+        path: '/feed-schedule/create',
+        summary: 'Create Feed Schedule',
+        description: 'Create a new automated feeding schedule with customizable frequency and time settings',
+        security: [['sanctum' => []]],
+        tags: ['Feed Schedule'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            description: 'Feed schedule data',
+            content: new OA\JsonContent(ref: '#/components/schemas/CreateFeedScheduleRequest')
+        ),
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: 'Feed schedule created successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/FeedScheduleResponse')
+            ),
+            new OA\Response(
+                response: 422,
+                description: 'Validation error',
+                content: new OA\JsonContent(ref: '#/components/schemas/ValidationErrorResponse')
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Unauthorized',
+                content: new OA\JsonContent(ref: '#/components/schemas/UnauthorizedResponse')
+            ),
+            new OA\Response(
+                response: 500,
+                description: 'Server error',
+                content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')
+            ),
+        ]
+    )]
     public function store(StoreFeedScheduleRequest $request): JsonResponse|RedirectResponse
     {
         try {
@@ -92,6 +194,54 @@ class FeedScheduleController extends Controller
     /**
      * Update the specified feed schedule
      */
+    #[OA\Put(
+        path: '/feed-schedule/{id}',
+        summary: 'Update Feed Schedule',
+        description: 'Update an existing feed schedule with new settings (all fields are optional)',
+        security: [['sanctum' => []]],
+        tags: ['Feed Schedule'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                description: 'Feed schedule ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer', example: 1)
+            ),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            description: 'Updated feed schedule data',
+            content: new OA\JsonContent(ref: '#/components/schemas/UpdateFeedScheduleRequest')
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Feed schedule updated successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/FeedScheduleResponse')
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Feed schedule not found',
+                content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')
+            ),
+            new OA\Response(
+                response: 422,
+                description: 'Validation error',
+                content: new OA\JsonContent(ref: '#/components/schemas/ValidationErrorResponse')
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Unauthorized',
+                content: new OA\JsonContent(ref: '#/components/schemas/UnauthorizedResponse')
+            ),
+            new OA\Response(
+                response: 500,
+                description: 'Server error',
+                content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')
+            ),
+        ]
+    )]
     public function update(UpdateFeedScheduleRequest $request, $id): JsonResponse|RedirectResponse
     {
         $schedule = FeedSchedule::findOrFail($id);
@@ -123,6 +273,49 @@ class FeedScheduleController extends Controller
     /**
      * Remove the specified feed schedule
      */
+    #[OA\Delete(
+        path: '/feed-schedule/{id}',
+        summary: 'Delete Feed Schedule',
+        description: 'Delete an existing feed schedule permanently',
+        security: [['sanctum' => []]],
+        tags: ['Feed Schedule'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                description: 'Feed schedule ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer', example: 1)
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Feed schedule deleted successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'Jadwal pakan berhasil dihapus!'),
+                        new OA\Property(property: 'status', type: 'integer', example: 200),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Feed schedule not found',
+                content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Unauthorized',
+                content: new OA\JsonContent(ref: '#/components/schemas/UnauthorizedResponse')
+            ),
+            new OA\Response(
+                response: 500,
+                description: 'Server error',
+                content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')
+            ),
+        ]
+    )]
     public function destroy(Request $request, $id): JsonResponse|RedirectResponse
     {
         try {
@@ -152,6 +345,44 @@ class FeedScheduleController extends Controller
     /**
      * Activate a feed schedule
      */
+    #[OA\Patch(
+        path: '/feed-schedule/{id}/activate',
+        summary: 'Activate Feed Schedule',
+        description: 'Activate a feed schedule to enable automatic feeding',
+        security: [['sanctum' => []]],
+        tags: ['Feed Schedule'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                description: 'Feed schedule ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer', example: 1)
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Feed schedule activated successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/FeedScheduleResponse')
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Feed schedule not found',
+                content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Unauthorized',
+                content: new OA\JsonContent(ref: '#/components/schemas/UnauthorizedResponse')
+            ),
+            new OA\Response(
+                response: 500,
+                description: 'Server error',
+                content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')
+            ),
+        ]
+    )]
     public function activate(Request $request, $id): JsonResponse
     {
         $schedule = FeedSchedule::findOrFail($id);
@@ -175,6 +406,44 @@ class FeedScheduleController extends Controller
     /**
      * Deactivate a feed schedule
      */
+    #[OA\Patch(
+        path: '/feed-schedule/{id}/deactivate',
+        summary: 'Deactivate Feed Schedule',
+        description: 'Deactivate a feed schedule to disable automatic feeding',
+        security: [['sanctum' => []]],
+        tags: ['Feed Schedule'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                description: 'Feed schedule ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer', example: 1)
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Feed schedule deactivated successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/FeedScheduleResponse')
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Feed schedule not found',
+                content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Unauthorized',
+                content: new OA\JsonContent(ref: '#/components/schemas/UnauthorizedResponse')
+            ),
+            new OA\Response(
+                response: 500,
+                description: 'Server error',
+                content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')
+            ),
+        ]
+    )]
     public function deactivate(Request $request, $id): JsonResponse
     {
         $schedule = FeedSchedule::findOrFail($id);
@@ -198,6 +467,25 @@ class FeedScheduleController extends Controller
     /**
      * Get active schedules for authenticated user
      */
+    #[OA\Get(
+        path: '/feed-schedule/active',
+        summary: 'Get Active Feed Schedules',
+        description: 'Get all currently active feed schedules for the authenticated user',
+        security: [['sanctum' => []]],
+        tags: ['Feed Schedule'],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Active feed schedules retrieved successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/FeedScheduleListResponse')
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Unauthorized',
+                content: new OA\JsonContent(ref: '#/components/schemas/UnauthorizedResponse')
+            ),
+        ]
+    )]
     public function active(Request $request): JsonResponse
     {
         $userId = $request->user()->id ?? null;
