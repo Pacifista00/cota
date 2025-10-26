@@ -180,6 +180,198 @@
                     }
                 ]
             }
+        },
+        "/feed/history": {
+            "get": {
+                "tags": [
+                    "Feed"
+                ],
+                "summary": "Get Feed Execution History",
+                "description": "Retrieve complete history of all feed executions including scheduled and manual feeds, ordered by execution time",
+                "operationId": "e3b756213b51b15505dae46dfa305e3d",
+                "responses": {
+                    "200": {
+                        "description": "Feed history retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FeedHistoryResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UnauthorizedResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/sensor-data/history": {
+            "get": {
+                "tags": [
+                    "Sensor"
+                ],
+                "summary": "Get Sensor Data History",
+                "description": "Retrieve historical sensor data with advanced filtering, pagination, and aggregation options. Supports time-based queries, cursor pagination, and granularity control.",
+                "operationId": "09b33a195a1670a45cceee374f70efbf",
+                "parameters": [
+                    {
+                        "name": "minutes",
+                        "in": "query",
+                        "description": "Get data from last N minutes (mutually exclusive with from/to)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 60
+                        }
+                    },
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "description": "Start date/time (ISO 8601 format)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2024-01-01T00:00:00Z"
+                        }
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "description": "End date/time (ISO 8601 format)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2024-01-01T23:59:59Z"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Maximum number of records (max: 5000)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1000,
+                            "example": 100
+                        }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Sort order",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "desc",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ],
+                            "example": "desc"
+                        }
+                    },
+                    {
+                        "name": "cursor",
+                        "in": "query",
+                        "description": "Cursor for pagination (base64 encoded)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "eyJpZCI6MTIzNDV9"
+                        }
+                    },
+                    {
+                        "name": "granularity",
+                        "in": "query",
+                        "description": "Data granularity level",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "raw",
+                            "enum": [
+                                "raw",
+                                "minute"
+                            ],
+                            "example": "raw"
+                        }
+                    },
+                    {
+                        "name": "metrics",
+                        "in": "query",
+                        "description": "Comma-separated list of metrics to return",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "keasaman,kekeruhan,suhu"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Sensor history data retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SensorHistoryResponse"
+                                }
+                            }
+                        }
+                    },
+                    "304": {
+                        "description": "Not Modified (cached data is still valid)"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UnauthorizedResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No history data found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -202,6 +394,69 @@
                             }
                         },
                         "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "FeedHistoryResponse": {
+                "title": "Feed History Response",
+                "description": "Feed execution history response",
+                "properties": {
+                    "message": {
+                        "description": "Response message",
+                        "type": "string",
+                        "example": "Histori feed berhasil dimuat."
+                    },
+                    "status": {
+                        "description": "HTTP status code",
+                        "type": "integer",
+                        "example": 200
+                    },
+                    "data": {
+                        "description": "Array of feed executions",
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "id": {
+                                    "type": "integer",
+                                    "example": 1
+                                },
+                                "feed_schedule_id": {
+                                    "type": "integer",
+                                    "example": 1,
+                                    "nullable": true
+                                },
+                                "scheduled_time": {
+                                    "type": "string",
+                                    "format": "time",
+                                    "example": "08:00:00"
+                                },
+                                "executed_at": {
+                                    "type": "string",
+                                    "format": "date-time",
+                                    "example": "2024-01-01 08:00:05"
+                                },
+                                "status": {
+                                    "type": "string",
+                                    "example": "completed"
+                                },
+                                "execution_type": {
+                                    "type": "string",
+                                    "example": "scheduled"
+                                },
+                                "delay_seconds": {
+                                    "type": "integer",
+                                    "example": 5,
+                                    "nullable": true
+                                },
+                                "created_at": {
+                                    "type": "string",
+                                    "format": "date-time",
+                                    "example": "2024-01-01 08:00:00"
+                                }
+                            },
+                            "type": "object"
+                        }
                     }
                 },
                 "type": "object"
@@ -343,6 +598,86 @@
                 },
                 "type": "object"
             },
+            "SensorHistoryResponse": {
+                "title": "Sensor History Response",
+                "description": "Sensor data history response with pagination",
+                "properties": {
+                    "message": {
+                        "description": "Response message",
+                        "type": "string",
+                        "example": "Data history sensor berhasil dimuat."
+                    },
+                    "status": {
+                        "description": "HTTP status code",
+                        "type": "integer",
+                        "example": 200
+                    },
+                    "data": {
+                        "description": "Array of sensor readings",
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "id": {
+                                    "type": "integer",
+                                    "example": 1
+                                },
+                                "kekeruhan": {
+                                    "type": "number",
+                                    "format": "float",
+                                    "example": 45.5
+                                },
+                                "keasaman": {
+                                    "type": "number",
+                                    "format": "float",
+                                    "example": 7.2
+                                },
+                                "suhu": {
+                                    "type": "number",
+                                    "format": "float",
+                                    "example": 28.5
+                                },
+                                "waktu": {
+                                    "type": "string",
+                                    "format": "date-time",
+                                    "example": "2024-01-01 12:00:00"
+                                },
+                                "data_source": {
+                                    "type": "string",
+                                    "example": "REAL_TIME"
+                                },
+                                "is_estimated": {
+                                    "type": "boolean",
+                                    "example": false
+                                }
+                            },
+                            "type": "object"
+                        }
+                    },
+                    "page": {
+                        "properties": {
+                            "order": {
+                                "type": "string",
+                                "example": "desc"
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "example": 1000
+                            },
+                            "next_cursor": {
+                                "type": "string",
+                                "example": null,
+                                "nullable": true
+                            },
+                            "has_more": {
+                                "type": "boolean",
+                                "example": false
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
             "UnauthorizedResponse": {
                 "title": "Unauthorized Response",
                 "description": "Unauthorized access response",
@@ -396,6 +731,14 @@
         {
             "name": "Authentication",
             "description": "User authentication and authorization endpoints"
+        },
+        {
+            "name": "Feed",
+            "description": "Feed control and history endpoints"
+        },
+        {
+            "name": "Sensor",
+            "description": "Sensor data monitoring and management endpoints"
         }
     ]
 }

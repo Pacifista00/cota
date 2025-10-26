@@ -8,6 +8,7 @@ use App\Http\Resources\SensorResource;
 use App\Services\SensorDataService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Carbon;
+use OpenApi\Attributes as OA;
 
 class SensorController extends Controller
 {
@@ -90,6 +91,98 @@ class SensorController extends Controller
             'data' => new SensorResource($latestSensorData)
         ], 200);
     }
+    
+    #[OA\Get(
+        path: '/sensor-data/history',
+        summary: 'Get Sensor Data History',
+        description: 'Retrieve historical sensor data with advanced filtering, pagination, and aggregation options. Supports time-based queries, cursor pagination, and granularity control.',
+        security: [['sanctum' => []]],
+        tags: ['Sensor'],
+        parameters: [
+            new OA\Parameter(
+                name: 'minutes',
+                description: 'Get data from last N minutes (mutually exclusive with from/to)',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', example: 60)
+            ),
+            new OA\Parameter(
+                name: 'from',
+                description: 'Start date/time (ISO 8601 format)',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string', format: 'date-time', example: '2024-01-01T00:00:00Z')
+            ),
+            new OA\Parameter(
+                name: 'to',
+                description: 'End date/time (ISO 8601 format)',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string', format: 'date-time', example: '2024-01-01T23:59:59Z')
+            ),
+            new OA\Parameter(
+                name: 'limit',
+                description: 'Maximum number of records (max: 5000)',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 1000, example: 100)
+            ),
+            new OA\Parameter(
+                name: 'order',
+                description: 'Sort order',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string', enum: ['asc', 'desc'], default: 'desc', example: 'desc')
+            ),
+            new OA\Parameter(
+                name: 'cursor',
+                description: 'Cursor for pagination (base64 encoded)',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string', example: 'eyJpZCI6MTIzNDV9')
+            ),
+            new OA\Parameter(
+                name: 'granularity',
+                description: 'Data granularity level',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string', enum: ['raw', 'minute'], default: 'raw', example: 'raw')
+            ),
+            new OA\Parameter(
+                name: 'metrics',
+                description: 'Comma-separated list of metrics to return',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string', example: 'keasaman,kekeruhan,suhu')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Sensor history data retrieved successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/SensorHistoryResponse')
+            ),
+            new OA\Response(
+                response: 304,
+                description: 'Not Modified (cached data is still valid)'
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Unauthorized',
+                content: new OA\JsonContent(ref: '#/components/schemas/UnauthorizedResponse')
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'No history data found',
+                content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')
+            ),
+            new OA\Response(
+                response: 422,
+                description: 'Validation error',
+                content: new OA\JsonContent(ref: '#/components/schemas/ValidationErrorResponse')
+            ),
+        ]
+    )]
     public function history(Request $request)
     {
         // Backward compatibility: if no relevant params, keep old behavior

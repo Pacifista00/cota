@@ -13,6 +13,7 @@ use App\Services\FeedSchedulingService;
 use App\Services\FeedStatusUpdaterService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Carbon;
+use OpenApi\Attributes as OA;
 
 class FeedController extends Controller
 {
@@ -107,6 +108,25 @@ class FeedController extends Controller
         ]);
     }
 
+    #[OA\Get(
+        path: '/feed/history',
+        summary: 'Get Feed Execution History',
+        description: 'Retrieve complete history of all feed executions including scheduled and manual feeds, ordered by execution time',
+        security: [['sanctum' => []]],
+        tags: ['Feed'],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Feed history retrieved successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/FeedHistoryResponse')
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Unauthorized',
+                content: new OA\JsonContent(ref: '#/components/schemas/UnauthorizedResponse')
+            ),
+        ]
+    )]
     public function history(Request $request)
     {
         $historyData = FeedExecution::orderBy('executed_at', 'desc')->get();
