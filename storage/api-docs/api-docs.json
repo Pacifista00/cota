@@ -752,6 +752,318 @@
                 ]
             }
         },
+        "/notifications": {
+            "get": {
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Get All Notifications",
+                "description": "Retrieve all notifications for the authenticated user with pagination support",
+                "operationId": "0f031f66cd8c52bf73e89fb2d050ad83",
+                "parameters": [
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Maximum number of notifications to return",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 50,
+                            "example": 20
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Notifications retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/NotificationListResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UnauthorizedResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/notifications/unread": {
+            "get": {
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Get Unread Notifications",
+                "description": "Retrieve only unread notifications for the authenticated user",
+                "operationId": "217f8101f2f40586e655f0fd48448959",
+                "parameters": [
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Maximum number of unread notifications to return",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10,
+                            "example": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Unread notifications retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/NotificationListResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UnauthorizedResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/notifications/statistics": {
+            "get": {
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Get Notification Statistics",
+                "description": "Get statistics about user notifications including total, read, and unread counts",
+                "operationId": "3540e012e26770dc3cf60a61ff4a65c5",
+                "responses": {
+                    "200": {
+                        "description": "Notification statistics retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/NotificationStatisticsResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UnauthorizedResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/notifications/{id}/mark-as-read": {
+            "post": {
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Mark Notification as Read",
+                "description": "Mark a specific notification as read",
+                "operationId": "65b003d16b666211a43ae38f1d6925db",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Notification ID (UUID)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "9d3e461f-5a7c-4c5e-8b5d-7f9c8d5e6a4b"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Notification marked as read successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MarkNotificationResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UnauthorizedResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/notifications/mark-all-as-read": {
+            "post": {
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Mark All Notifications as Read",
+                "description": "Mark all notifications for the authenticated user as read",
+                "operationId": "014a8260c48c9380eecd3d2f31bed948",
+                "responses": {
+                    "200": {
+                        "description": "All notifications marked as read successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MarkAllNotificationResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UnauthorizedResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/notifications/{id}": {
+            "delete": {
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Delete Notification",
+                "description": "Delete a specific notification permanently",
+                "operationId": "ccdcc730b2088097dd94128f24960dbf",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Notification ID (UUID)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "9d3e461f-5a7c-4c5e-8b5d-7f9c8d5e6a4b"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Notification deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Notifikasi berhasil dihapus."
+                                        },
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 200
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UnauthorizedResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/sensor-data/history": {
             "get": {
                 "tags": [
@@ -1321,6 +1633,167 @@
                 },
                 "type": "object"
             },
+            "MarkAllNotificationResponse": {
+                "title": "Mark All Notifications Response",
+                "description": "Response for marking all notifications as read",
+                "properties": {
+                    "message": {
+                        "description": "Response message with count",
+                        "type": "string",
+                        "example": "5 notifikasi berhasil ditandai sebagai sudah dibaca."
+                    },
+                    "status": {
+                        "description": "HTTP status code",
+                        "type": "integer",
+                        "example": 200
+                    },
+                    "marked_count": {
+                        "description": "Number of notifications marked as read",
+                        "type": "integer",
+                        "example": 5
+                    }
+                },
+                "type": "object"
+            },
+            "MarkNotificationResponse": {
+                "title": "Mark Notification Response",
+                "description": "Response for marking notification as read",
+                "properties": {
+                    "message": {
+                        "description": "Response message",
+                        "type": "string",
+                        "example": "Notifikasi berhasil ditandai sebagai sudah dibaca."
+                    },
+                    "status": {
+                        "description": "HTTP status code",
+                        "type": "integer",
+                        "example": 200
+                    }
+                },
+                "type": "object"
+            },
+            "NotificationListResponse": {
+                "title": "Notification List Response",
+                "description": "Notification list response with collection of notifications",
+                "properties": {
+                    "message": {
+                        "description": "Response message",
+                        "type": "string",
+                        "example": "Daftar notifikasi berhasil dimuat."
+                    },
+                    "status": {
+                        "description": "HTTP status code",
+                        "type": "integer",
+                        "example": 200
+                    },
+                    "data": {
+                        "description": "Array of notifications",
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "id": {
+                                    "type": "string",
+                                    "example": "9d3e461f-5a7c-4c5e-8b5d-7f9c8d5e6a4b"
+                                },
+                                "type": {
+                                    "type": "string",
+                                    "example": "App\\Notifications\\FeedExecutionNotification"
+                                },
+                                "title": {
+                                    "type": "string",
+                                    "example": "Feed Execution Success"
+                                },
+                                "message": {
+                                    "type": "string",
+                                    "example": "Pemberian pakan berhasil dilakukan"
+                                },
+                                "status": {
+                                    "type": "string",
+                                    "example": "success"
+                                },
+                                "icon": {
+                                    "type": "string",
+                                    "example": "check-circle",
+                                    "nullable": true
+                                },
+                                "color": {
+                                    "type": "string",
+                                    "example": "success",
+                                    "nullable": true
+                                },
+                                "action_url": {
+                                    "type": "string",
+                                    "example": "/feed/history",
+                                    "nullable": true
+                                },
+                                "feed_execution": {
+                                    "type": "object",
+                                    "nullable": true
+                                },
+                                "read_at": {
+                                    "type": "string",
+                                    "format": "date-time",
+                                    "example": "2024-01-15T10:30:00+00:00",
+                                    "nullable": true
+                                },
+                                "created_at": {
+                                    "type": "string",
+                                    "format": "date-time",
+                                    "example": "2024-01-15T08:00:00+00:00"
+                                },
+                                "created_at_human": {
+                                    "type": "string",
+                                    "example": "2 hours ago"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    },
+                    "unread_count": {
+                        "description": "Total unread notifications count",
+                        "type": "integer",
+                        "example": 5
+                    }
+                },
+                "type": "object"
+            },
+            "NotificationStatisticsResponse": {
+                "title": "Notification Statistics Response",
+                "description": "Notification statistics response with counts",
+                "properties": {
+                    "message": {
+                        "description": "Response message",
+                        "type": "string",
+                        "example": "Statistik notifikasi berhasil dimuat."
+                    },
+                    "status": {
+                        "description": "HTTP status code",
+                        "type": "integer",
+                        "example": 200
+                    },
+                    "data": {
+                        "properties": {
+                            "total": {
+                                "description": "Total notifications count",
+                                "type": "integer",
+                                "example": 50
+                            },
+                            "unread": {
+                                "description": "Unread notifications count",
+                                "type": "integer",
+                                "example": 5
+                            },
+                            "read": {
+                                "description": "Read notifications count",
+                                "type": "integer",
+                                "example": 45
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
             "RegisterRequest": {
                 "title": "Register Request",
                 "description": "User registration request payload",
@@ -1594,6 +2067,10 @@
         {
             "name": "Sensor",
             "description": "Sensor data monitoring and management endpoints"
+        },
+        {
+            "name": "Notifications",
+            "description": "Notification management endpoints"
         }
     ]
 }
