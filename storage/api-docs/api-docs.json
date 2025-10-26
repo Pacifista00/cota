@@ -181,6 +181,228 @@
                 ]
             }
         },
+        "/feed/give": {
+            "get": {
+                "tags": [
+                    "Feed"
+                ],
+                "summary": "Give Manual Feed",
+                "description": "Trigger manual feeding (not related to any schedule)",
+                "operationId": "454851e10a770c896202751dce4433a4",
+                "responses": {
+                    "200": {
+                        "description": "Manual feed executed successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Pakan berhasil diberikan secara manual"
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to execute feed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Gagal memberikan pakan"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UnauthorizedResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/feed/give/{id}": {
+            "get": {
+                "tags": [
+                    "Feed"
+                ],
+                "summary": "Give Scheduled Feed",
+                "description": "Trigger manual execution of a specific feed schedule",
+                "operationId": "2be91692ed2378bd1e69748fdf35bf69",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Feed Schedule ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Scheduled feed executed successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Pakan berhasil diberikan"
+                                        },
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Schedule not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Jadwal tidak ditemukan."
+                                        },
+                                        "status": {
+                                            "type": "string",
+                                            "example": "error"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to execute feed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Gagal memberikan pakan"
+                                        },
+                                        "status": {
+                                            "type": "string",
+                                            "example": "error"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UnauthorizedResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/feed/ready": {
+            "get": {
+                "tags": [
+                    "Feed"
+                ],
+                "summary": "Get Ready Feed Schedules",
+                "description": "Get all feed schedules that are ready to execute (within the last minute)",
+                "operationId": "fe33d70676a4862f1eca20f5f0a3cf55",
+                "responses": {
+                    "200": {
+                        "description": "Ready schedules retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "ready_schedules": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        },
+                                        "count": {
+                                            "type": "integer",
+                                            "example": 2
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UnauthorizedResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/feed/history": {
             "get": {
                 "tags": [
@@ -196,6 +418,63 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/FeedHistoryResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UnauthorizedResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/feed/status": {
+            "get": {
+                "tags": [
+                    "Feed"
+                ],
+                "summary": "Check Feed Execution Status",
+                "description": "Check the status of recent feed execution (for polling)",
+                "operationId": "029182de60b2015f9fc7b8210cd37dd3",
+                "responses": {
+                    "200": {
+                        "description": "Feed execution status retrieved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "enum": [
+                                                "success",
+                                                "pending"
+                                            ],
+                                            "example": "success"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Pakan berhasil diberikan!"
+                                        },
+                                        "executed_at": {
+                                            "type": "string",
+                                            "format": "date-time",
+                                            "example": "2024-01-15T08:00:00+07:00",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
                                 }
                             }
                         }
@@ -1064,6 +1343,415 @@
                 ]
             }
         },
+        "/pond/store": {
+            "post": {
+                "tags": [
+                    "Pond"
+                ],
+                "summary": "Create Pond",
+                "description": "Create a new fish pond with auto-generated token",
+                "operationId": "5cd8d59b7995d8fc4718ed4f87b72305",
+                "requestBody": {
+                    "description": "Pond data",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreatePondRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Pond created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PondResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UnauthorizedResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/pond/update/{id}": {
+            "put": {
+                "tags": [
+                    "Pond"
+                ],
+                "summary": "Update Pond",
+                "description": "Update pond information (only owner can update)",
+                "operationId": "63961c39216631bd803702bdedce5f46",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Pond ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Updated pond data",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreatePondRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Pond updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PondResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - Not pond owner",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Pond not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UnauthorizedResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/pond/delete/{id}": {
+            "delete": {
+                "tags": [
+                    "Pond"
+                ],
+                "summary": "Delete Pond",
+                "description": "Delete pond permanently (only owner can delete)",
+                "operationId": "f9d2e452d04479e4789bc63c5e50fcb7",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Pond ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Pond deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Tambak berhasil dihapus!"
+                                        },
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 200
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - Not pond owner",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Pond not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UnauthorizedResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/sensor-data/insert": {
+            "post": {
+                "tags": [
+                    "Sensor"
+                ],
+                "summary": "Insert Sensor Data",
+                "description": "Insert new sensor reading data. Supports both real-time and delayed data. Normalizes invalid values automatically.",
+                "operationId": "92282c7ec916011e2da45dc5d52bdf98",
+                "requestBody": {
+                    "description": "Sensor reading data",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SensorDataRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Sensor data inserted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SensorDataResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UnauthorizedResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/sensor-data/latest": {
+            "get": {
+                "tags": [
+                    "Sensor"
+                ],
+                "summary": "Get Latest Sensor Data",
+                "description": "Retrieve the most recent sensor reading",
+                "operationId": "b26ce3b8ad362c12dc52ce414570abe4",
+                "responses": {
+                    "200": {
+                        "description": "Latest sensor data retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Data sensor terbaru berhasil dimuat."
+                                        },
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "kekeruhan": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 45.5
+                                                },
+                                                "keasaman": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 7.2
+                                                },
+                                                "suhu": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 28.5
+                                                },
+                                                "waktu": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2024-01-15 08:00:00"
+                                                },
+                                                "data_source": {
+                                                    "type": "string",
+                                                    "example": "REAL_TIME"
+                                                },
+                                                "is_estimated": {
+                                                    "type": "boolean",
+                                                    "example": false
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No sensor data found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Data sensor tidak ditemukan."
+                                        },
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 404
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UnauthorizedResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/sensor-data/history": {
             "get": {
                 "tags": [
@@ -1218,6 +1906,77 @@
                     }
                 ]
             }
+        },
+        "/sensor-data/quality": {
+            "get": {
+                "tags": [
+                    "Sensor"
+                ],
+                "summary": "Get Sensor Data Quality Statistics",
+                "description": "Get statistics about sensor data quality including real-time vs estimated records, and data gaps",
+                "operationId": "be390cdbda45f74752043611bf7c6aef",
+                "parameters": [
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "description": "Start date for statistics (format: YYYY-MM-DD)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2024-01-01"
+                        }
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "description": "End date for statistics (format: YYYY-MM-DD)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2024-01-31"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Data quality statistics retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DataQualityResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UnauthorizedResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -1286,6 +2045,87 @@
                                 5
                             ]
                         }
+                    }
+                },
+                "type": "object"
+            },
+            "CreatePondRequest": {
+                "title": "Create Pond Request",
+                "description": "Request payload for creating a new pond",
+                "required": [
+                    "nama",
+                    "lokasi"
+                ],
+                "properties": {
+                    "nama": {
+                        "description": "Pond name (required)",
+                        "type": "string",
+                        "example": "Tambak Utama"
+                    },
+                    "lokasi": {
+                        "description": "Pond location (required)",
+                        "type": "string",
+                        "example": "Jl. Pantai Selatan No. 123"
+                    }
+                },
+                "type": "object"
+            },
+            "DataQualityResponse": {
+                "title": "Data Quality Response",
+                "description": "Sensor data quality statistics response",
+                "properties": {
+                    "message": {
+                        "description": "Response message",
+                        "type": "string",
+                        "example": "Data quality statistics retrieved successfully."
+                    },
+                    "status": {
+                        "description": "HTTP status code",
+                        "type": "integer",
+                        "example": 200
+                    },
+                    "data": {
+                        "properties": {
+                            "total_records": {
+                                "type": "integer",
+                                "example": 1000
+                            },
+                            "real_time_records": {
+                                "type": "integer",
+                                "example": 850
+                            },
+                            "estimated_records": {
+                                "type": "integer",
+                                "example": 150
+                            },
+                            "data_quality_percentage": {
+                                "type": "number",
+                                "format": "float",
+                                "example": 85
+                            },
+                            "missing_data_gaps": {
+                                "type": "integer",
+                                "example": 5
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "period": {
+                        "properties": {
+                            "start_date": {
+                                "type": "string",
+                                "format": "date",
+                                "example": "2024-01-01",
+                                "nullable": true
+                            },
+                            "end_date": {
+                                "type": "string",
+                                "format": "date",
+                                "example": "2024-01-15",
+                                "nullable": true
+                            }
+                        },
+                        "type": "object"
                     }
                 },
                 "type": "object"
@@ -1794,6 +2634,52 @@
                 },
                 "type": "object"
             },
+            "PondResponse": {
+                "title": "Pond Response",
+                "description": "Pond response with data",
+                "properties": {
+                    "message": {
+                        "description": "Response message",
+                        "type": "string",
+                        "example": "Tambak berhasil disimpan!"
+                    },
+                    "status": {
+                        "description": "HTTP status code",
+                        "type": "integer",
+                        "example": 201
+                    },
+                    "data": {
+                        "properties": {
+                            "user_id": {
+                                "type": "integer",
+                                "example": 1
+                            },
+                            "nama": {
+                                "type": "string",
+                                "example": "Tambak Utama"
+                            },
+                            "lokasi": {
+                                "type": "string",
+                                "example": "Jl. Pantai Selatan No. 123"
+                            },
+                            "token_tambak": {
+                                "type": "string",
+                                "example": "a1b2c3d4e5f6g7h8"
+                            },
+                            "status_koneksi": {
+                                "type": "string",
+                                "example": "pending"
+                            },
+                            "status_perangkat": {
+                                "type": "string",
+                                "example": "off"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
             "RegisterRequest": {
                 "title": "Register Request",
                 "description": "User registration request payload",
@@ -1852,6 +2738,96 @@
                                 "description": "HTTP status code",
                                 "type": "integer",
                                 "example": 201
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "SensorDataRequest": {
+                "title": "Sensor Data Request",
+                "description": "Request payload for inserting sensor data",
+                "required": [
+                    "kekeruhan",
+                    "keasaman",
+                    "suhu"
+                ],
+                "properties": {
+                    "kekeruhan": {
+                        "description": "Turbidity value (NTU)",
+                        "type": "number",
+                        "format": "float",
+                        "example": 45.5
+                    },
+                    "keasaman": {
+                        "description": "pH value",
+                        "type": "number",
+                        "format": "float",
+                        "example": 7.2
+                    },
+                    "suhu": {
+                        "description": "Temperature (°C)",
+                        "type": "number",
+                        "format": "float",
+                        "example": 28.5
+                    },
+                    "reading_timestamp": {
+                        "description": "Timestamp when sensor reading was taken (ISO 8601)",
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2024-01-15T08:00:00Z"
+                    }
+                },
+                "type": "object"
+            },
+            "SensorDataResponse": {
+                "title": "Sensor Data Response",
+                "description": "Sensor data response with single reading",
+                "properties": {
+                    "message": {
+                        "description": "Response message",
+                        "type": "string",
+                        "example": "Data sensor berhasil ditambahkan!"
+                    },
+                    "status": {
+                        "description": "HTTP status code",
+                        "type": "integer",
+                        "example": 201
+                    },
+                    "data": {
+                        "properties": {
+                            "id": {
+                                "type": "integer",
+                                "example": 1
+                            },
+                            "kekeruhan": {
+                                "type": "number",
+                                "format": "float",
+                                "example": 45.5
+                            },
+                            "keasaman": {
+                                "type": "number",
+                                "format": "float",
+                                "example": 7.2
+                            },
+                            "suhu": {
+                                "type": "number",
+                                "format": "float",
+                                "example": 28.5
+                            },
+                            "waktu": {
+                                "type": "string",
+                                "format": "date-time",
+                                "example": "2024-01-15 08:00:00"
+                            },
+                            "data_source": {
+                                "type": "string",
+                                "example": "REAL_TIME"
+                            },
+                            "is_estimated": {
+                                "type": "boolean",
+                                "example": false
                             }
                         },
                         "type": "object"
@@ -2067,6 +3043,10 @@
         {
             "name": "Sensor",
             "description": "Sensor data monitoring and management endpoints"
+        },
+        {
+            "name": "Pond",
+            "description": "Pond management endpoints"
         },
         {
             "name": "Notifications",

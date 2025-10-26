@@ -31,6 +31,41 @@ class FeedController extends Controller
     /**
      * Beri pakan manual (tidak terkait jadwal)
      */
+    #[OA\Get(
+        path: '/feed/give',
+        summary: 'Give Manual Feed',
+        description: 'Trigger manual feeding (not related to any schedule)',
+        security: [['sanctum' => []]],
+        tags: ['Feed'],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Manual feed executed successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', example: 'success'),
+                        new OA\Property(property: 'message', type: 'string', example: 'Pakan berhasil diberikan secara manual'),
+                        new OA\Property(property: 'data', type: 'object'),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 500,
+                description: 'Failed to execute feed',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', example: 'error'),
+                        new OA\Property(property: 'message', type: 'string', example: 'Gagal memberikan pakan'),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Unauthorized',
+                content: new OA\JsonContent(ref: '#/components/schemas/UnauthorizedResponse')
+            ),
+        ]
+    )]
     public function beriPakan(Request $request)
     {
         // Gunakan service untuk execute manual feed
@@ -53,6 +88,60 @@ class FeedController extends Controller
     /**
      * Beri pakan terjadwal (trigger manual dari frontend untuk jadwal tertentu)
      */
+    #[OA\Get(
+        path: '/feed/give/{id}',
+        summary: 'Give Scheduled Feed',
+        description: 'Trigger manual execution of a specific feed schedule',
+        security: [['sanctum' => []]],
+        tags: ['Feed'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                description: 'Feed Schedule ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer', example: 1)
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Scheduled feed executed successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'Pakan berhasil diberikan'),
+                        new OA\Property(property: 'status', type: 'string', example: 'success'),
+                        new OA\Property(property: 'data', type: 'object', nullable: true),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Schedule not found',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'Jadwal tidak ditemukan.'),
+                        new OA\Property(property: 'status', type: 'string', example: 'error'),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 500,
+                description: 'Failed to execute feed',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'Gagal memberikan pakan'),
+                        new OA\Property(property: 'status', type: 'string', example: 'error'),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Unauthorized',
+                content: new OA\JsonContent(ref: '#/components/schemas/UnauthorizedResponse')
+            ),
+        ]
+    )]
     public function beriPakanTerjadwal(Request $request, $id)
     {
         $jadwal = FeedSchedule::find($id);
@@ -84,6 +173,34 @@ class FeedController extends Controller
     /**
      * Get schedules yang siap dieksekusi (dalam 1 menit terakhir)
      */
+    #[OA\Get(
+        path: '/feed/ready',
+        summary: 'Get Ready Feed Schedules',
+        description: 'Get all feed schedules that are ready to execute (within the last minute)',
+        security: [['sanctum' => []]],
+        tags: ['Feed'],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Ready schedules retrieved successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(
+                            property: 'ready_schedules',
+                            type: 'array',
+                            items: new OA\Items(type: 'object')
+                        ),
+                        new OA\Property(property: 'count', type: 'integer', example: 2),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Unauthorized',
+                content: new OA\JsonContent(ref: '#/components/schemas/UnauthorizedResponse')
+            ),
+        ]
+    )]
     public function siap()
     {
         $readySchedules = $this->feedSchedulingService->getReadySchedules();
@@ -138,6 +255,31 @@ class FeedController extends Controller
         ], 200);
     }
 
+    #[OA\Get(
+        path: '/feed/status',
+        summary: 'Check Feed Execution Status',
+        description: 'Check the status of recent feed execution (for polling)',
+        security: [['sanctum' => []]],
+        tags: ['Feed'],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Feed execution status retrieved',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success', 'pending'], example: 'success'),
+                        new OA\Property(property: 'message', type: 'string', example: 'Pakan berhasil diberikan!'),
+                        new OA\Property(property: 'executed_at', type: 'string', format: 'date-time', nullable: true, example: '2024-01-15T08:00:00+07:00'),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Unauthorized',
+                content: new OA\JsonContent(ref: '#/components/schemas/UnauthorizedResponse')
+            ),
+        ]
+    )]
     public function checkFeedStatus(Request $request)
     {
         // Cek eksekusi terbaru yang masih pending

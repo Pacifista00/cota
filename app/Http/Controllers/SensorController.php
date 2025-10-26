@@ -12,6 +12,40 @@ use OpenApi\Attributes as OA;
 
 class SensorController extends Controller
 {
+    #[OA\Post(
+        path: '/sensor-data/insert',
+        summary: 'Insert Sensor Data',
+        description: 'Insert new sensor reading data. Supports both real-time and delayed data. Normalizes invalid values automatically.',
+        security: [['sanctum' => []]],
+        tags: ['Sensor'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            description: 'Sensor reading data',
+            content: new OA\JsonContent(ref: '#/components/schemas/SensorDataRequest')
+        ),
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: 'Sensor data inserted successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/SensorDataResponse')
+            ),
+            new OA\Response(
+                response: 422,
+                description: 'Validation error',
+                content: new OA\JsonContent(ref: '#/components/schemas/ValidationErrorResponse')
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Unauthorized',
+                content: new OA\JsonContent(ref: '#/components/schemas/UnauthorizedResponse')
+            ),
+            new OA\Response(
+                response: 500,
+                description: 'Server error',
+                content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')
+            ),
+        ]
+    )]
     public function store(Request $request)
     {
         $validatedData = $request->validate([
@@ -74,6 +108,53 @@ class SensorController extends Controller
             ], 500);
         }
     }
+    #[OA\Get(
+        path: '/sensor-data/latest',
+        summary: 'Get Latest Sensor Data',
+        description: 'Retrieve the most recent sensor reading',
+        security: [['sanctum' => []]],
+        tags: ['Sensor'],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Latest sensor data retrieved successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'Data sensor terbaru berhasil dimuat.'),
+                        new OA\Property(property: 'status', type: 'integer', example: 200),
+                        new OA\Property(
+                            property: 'data',
+                            properties: [
+                                new OA\Property(property: 'id', type: 'integer', example: 1),
+                                new OA\Property(property: 'kekeruhan', type: 'number', format: 'float', example: 45.5),
+                                new OA\Property(property: 'keasaman', type: 'number', format: 'float', example: 7.2),
+                                new OA\Property(property: 'suhu', type: 'number', format: 'float', example: 28.5),
+                                new OA\Property(property: 'waktu', type: 'string', format: 'date-time', example: '2024-01-15 08:00:00'),
+                                new OA\Property(property: 'data_source', type: 'string', example: 'REAL_TIME'),
+                                new OA\Property(property: 'is_estimated', type: 'boolean', example: false),
+                            ],
+                            type: 'object'
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'No sensor data found',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'Data sensor tidak ditemukan.'),
+                        new OA\Property(property: 'status', type: 'integer', example: 404),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Unauthorized',
+                content: new OA\JsonContent(ref: '#/components/schemas/UnauthorizedResponse')
+            ),
+        ]
+    )]
     public function latest()
     {
         $latestSensorData = Sensor::latest()->first();
@@ -448,6 +529,46 @@ class SensorController extends Controller
     /**
      * Get data quality statistics
      */
+    #[OA\Get(
+        path: '/sensor-data/quality',
+        summary: 'Get Sensor Data Quality Statistics',
+        description: 'Get statistics about sensor data quality including real-time vs estimated records, and data gaps',
+        security: [['sanctum' => []]],
+        tags: ['Sensor'],
+        parameters: [
+            new OA\Parameter(
+                name: 'start_date',
+                description: 'Start date for statistics (format: YYYY-MM-DD)',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string', format: 'date', example: '2024-01-01')
+            ),
+            new OA\Parameter(
+                name: 'end_date',
+                description: 'End date for statistics (format: YYYY-MM-DD)',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string', format: 'date', example: '2024-01-31')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Data quality statistics retrieved successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/DataQualityResponse')
+            ),
+            new OA\Response(
+                response: 422,
+                description: 'Validation error',
+                content: new OA\JsonContent(ref: '#/components/schemas/ValidationErrorResponse')
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Unauthorized',
+                content: new OA\JsonContent(ref: '#/components/schemas/UnauthorizedResponse')
+            ),
+        ]
+    )]
     public function dataQuality(Request $request)
     {
         $request->validate([
