@@ -1,0 +1,204 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "COTA API Documentation",
+        "description": "API documentation for COTA - Smart Fish Feeding System. This API provides endpoints for managing fish pond feeding schedules, monitoring sensor data, and handling user authentication.",
+        "contact": {
+            "name": "COTA Support",
+            "email": "support@cota.com"
+        },
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "/api",
+            "description": "COTA API Server"
+        },
+        {
+            "url": "/api"
+        }
+    ],
+    "paths": {
+        "/login": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "User Login",
+                "description": "Authenticate user with email and password, and generate access token",
+                "operationId": "2dd578ff7aba2721293dac66833b27d1",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LoginRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Login successful",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LoginResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid credentials",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UnauthorizedResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "ErrorResponse": {
+                "title": "Error Response",
+                "description": "Standard error response structure",
+                "properties": {
+                    "data": {
+                        "properties": {
+                            "message": {
+                                "description": "Error message",
+                                "type": "string",
+                                "example": "An error occurred"
+                            },
+                            "status": {
+                                "description": "HTTP status code",
+                                "type": "integer",
+                                "example": 400
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "LoginRequest": {
+                "title": "Login Request",
+                "description": "Login request payload",
+                "required": [
+                    "email",
+                    "password"
+                ],
+                "properties": {
+                    "email": {
+                        "description": "User email address",
+                        "type": "string",
+                        "format": "email",
+                        "example": "user@example.com"
+                    },
+                    "password": {
+                        "description": "User password",
+                        "type": "string",
+                        "format": "password",
+                        "example": "password123"
+                    }
+                },
+                "type": "object"
+            },
+            "LoginResponse": {
+                "title": "Login Response",
+                "description": "Successful login response",
+                "properties": {
+                    "data": {
+                        "properties": {
+                            "message": {
+                                "description": "Response message",
+                                "type": "string",
+                                "example": "Login berhasil!"
+                            },
+                            "status": {
+                                "description": "HTTP status code",
+                                "type": "integer",
+                                "example": 200
+                            },
+                            "token": {
+                                "description": "Sanctum authentication token",
+                                "type": "string",
+                                "example": "1|abcdefghijklmnopqrstuvwxyz123456"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "UnauthorizedResponse": {
+                "title": "Unauthorized Response",
+                "description": "Unauthorized access response",
+                "properties": {
+                    "data": {
+                        "properties": {
+                            "message": {
+                                "description": "Error message",
+                                "type": "string",
+                                "example": "Login Failed!"
+                            },
+                            "status": {
+                                "description": "HTTP status code",
+                                "type": "integer",
+                                "example": 401
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "ValidationErrorResponse": {
+                "title": "Validation Error Response",
+                "description": "Validation error response structure",
+                "properties": {
+                    "message": {
+                        "description": "Error message",
+                        "type": "string",
+                        "example": "Validasi gagal"
+                    },
+                    "status": {
+                        "description": "HTTP status code",
+                        "type": "integer",
+                        "example": 422
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "securitySchemes": {
+            "sanctum": {
+                "type": "http",
+                "description": "Laravel Sanctum authentication. Enter your token without the Bearer prefix.",
+                "scheme": "bearer",
+                "bearerFormat": "JWT"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Authentication",
+            "description": "User authentication and authorization endpoints"
+        }
+    ]
+}

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use OpenApi\Attributes as OA;
 
 class AuthController extends Controller
 {
@@ -47,6 +48,33 @@ class AuthController extends Controller
         }
     }
 
+    #[OA\Post(
+        path: '/login',
+        summary: 'User Login',
+        description: 'Authenticate user with email and password, and generate access token',
+        tags: ['Authentication'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/LoginRequest')
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Login successful',
+                content: new OA\JsonContent(ref: '#/components/schemas/LoginResponse')
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Invalid credentials',
+                content: new OA\JsonContent(ref: '#/components/schemas/UnauthorizedResponse')
+            ),
+            new OA\Response(
+                response: 422,
+                description: 'Validation error',
+                content: new OA\JsonContent(ref: '#/components/schemas/ValidationErrorResponse')
+            ),
+        ]
+    )]
     public function login(Request $request){
         $credentials = $request->validate([
             'email' => 'required|email',
