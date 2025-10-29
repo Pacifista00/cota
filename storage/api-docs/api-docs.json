@@ -2029,6 +2029,68 @@
                         "sanctum": []
                     }
                 ]
+            },
+            "put": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "Update User Profile",
+                "description": "Update authenticated user's profile information (partial update supported)",
+                "operationId": "7a6da80cc49941503d97ee019d3e8e28",
+                "requestBody": {
+                    "description": "Profile update data (all fields optional)",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateProfileRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Profile updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UpdateProfileResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Token tidak valid atau expired",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Token tidak valid atau expired"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UpdateProfileValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
             }
         }
     },
@@ -3049,6 +3111,81 @@
                                 5
                             ]
                         }
+                    }
+                },
+                "type": "object"
+            },
+            "UpdateProfileRequest": {
+                "title": "Update Profile Request",
+                "description": "Request payload for updating user profile (all fields optional for partial update)",
+                "properties": {
+                    "fullname": {
+                        "description": "User full name (optional)",
+                        "type": "string",
+                        "example": "John Doe Updated"
+                    },
+                    "email": {
+                        "description": "User email address (optional)",
+                        "type": "string",
+                        "example": "john.new@example.com"
+                    },
+                    "no_telepon": {
+                        "description": "User phone number (optional)",
+                        "type": "string",
+                        "example": "08987654321"
+                    }
+                },
+                "type": "object"
+            },
+            "UpdateProfileResponse": {
+                "title": "Update Profile Response",
+                "description": "Successful profile update response",
+                "properties": {
+                    "message": {
+                        "description": "Success message",
+                        "type": "string",
+                        "example": "Profile berhasil diperbarui"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/UserProfileResponse"
+                    }
+                },
+                "type": "object"
+            },
+            "UpdateProfileValidationError": {
+                "title": "Update Profile Validation Error",
+                "description": "Validation error response for profile update",
+                "properties": {
+                    "message": {
+                        "description": "Error message",
+                        "type": "string",
+                        "example": "Validasi gagal"
+                    },
+                    "errors": {
+                        "description": "Field-specific validation errors",
+                        "properties": {
+                            "email": {
+                                "description": "Email validation errors",
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                },
+                                "example": [
+                                    "Format email tidak valid"
+                                ]
+                            },
+                            "no_telepon": {
+                                "description": "Phone number validation errors",
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                },
+                                "example": [
+                                    "Nomor telepon sudah digunakan"
+                                ]
+                            }
+                        },
+                        "type": "object"
                     }
                 },
                 "type": "object"
