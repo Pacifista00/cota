@@ -2092,6 +2092,64 @@
                     }
                 ]
             }
+        },
+        "/user/account": {
+            "delete": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "Delete User Account",
+                "description": "Permanently delete authenticated user's account with password confirmation",
+                "operationId": "9eb82661ad32dbffd7018fcc3a263d1d",
+                "requestBody": {
+                    "description": "Password confirmation for account deletion",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/DeleteAccountRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Account deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DeleteAccountResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Wrong password or invalid token",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DeleteAccountUnauthorized"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -2241,6 +2299,45 @@
                             }
                         },
                         "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "DeleteAccountRequest": {
+                "title": "Delete Account Request",
+                "description": "Request payload for deleting user account",
+                "required": [
+                    "password"
+                ],
+                "properties": {
+                    "password": {
+                        "description": "User password for confirmation",
+                        "type": "string",
+                        "example": "user_password"
+                    }
+                },
+                "type": "object"
+            },
+            "DeleteAccountResponse": {
+                "title": "Delete Account Response",
+                "description": "Successful account deletion response",
+                "properties": {
+                    "message": {
+                        "description": "Success message",
+                        "type": "string",
+                        "example": "Akun berhasil dihapus"
+                    }
+                },
+                "type": "object"
+            },
+            "DeleteAccountUnauthorized": {
+                "title": "Delete Account Unauthorized",
+                "description": "Unauthorized response for account deletion (wrong password or invalid token)",
+                "properties": {
+                    "message": {
+                        "description": "Error message",
+                        "type": "string",
+                        "example": "Password salah"
                     }
                 },
                 "type": "object"

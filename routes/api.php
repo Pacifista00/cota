@@ -33,6 +33,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::get('/user/profile', [UserController::class, 'profile']);
     Route::put('/user/profile', [UserController::class, 'update']);
+    Route::delete('/user/account', [UserController::class, 'destroy']);
 
     Route::get('/sensor-data/history', [SensorController::class, 'history']);
 
