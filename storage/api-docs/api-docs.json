@@ -1977,6 +1977,59 @@
                     }
                 ]
             }
+        },
+        "/user/profile": {
+            "get": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "Get User Profile",
+                "description": "Retrieve authenticated user's profile information",
+                "operationId": "5ec759932352b381857e0724fbcdafa6",
+                "responses": {
+                    "200": {
+                        "description": "User profile retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserProfileResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Token tidak valid atau expired",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Token tidak valid atau expired"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "User not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserNotFoundResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -3000,6 +3053,65 @@
                 },
                 "type": "object"
             },
+            "UserNotFoundResponse": {
+                "title": "User Not Found Response",
+                "description": "User not found error response",
+                "properties": {
+                    "message": {
+                        "description": "Error message",
+                        "type": "string",
+                        "example": "User tidak ditemukan"
+                    }
+                },
+                "type": "object"
+            },
+            "UserProfileResponse": {
+                "title": "User Profile Response",
+                "description": "Authenticated user profile information",
+                "properties": {
+                    "id": {
+                        "description": "User ID",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "fullname": {
+                        "description": "User full name",
+                        "type": "string",
+                        "example": "John Doe"
+                    },
+                    "email": {
+                        "description": "User email address",
+                        "type": "string",
+                        "example": "john@example.com"
+                    },
+                    "no_telepon": {
+                        "description": "User phone number",
+                        "type": "string",
+                        "example": "08123456789"
+                    },
+                    "role": {
+                        "description": "User role",
+                        "type": "string",
+                        "enum": [
+                            "super-admin",
+                            "admin",
+                            "user"
+                        ],
+                        "example": "user"
+                    },
+                    "created_at": {
+                        "description": "Account creation timestamp",
+                        "type": "string",
+                        "example": "2024-01-15T08:30:00Z"
+                    },
+                    "updated_at": {
+                        "description": "Account last update timestamp",
+                        "type": "string",
+                        "example": "2024-10-20T10:15:00Z"
+                    }
+                },
+                "type": "object"
+            },
             "ValidationErrorResponse": {
                 "title": "Validation Error Response",
                 "description": "Validation error response structure",
@@ -3051,6 +3163,10 @@
         {
             "name": "Notifications",
             "description": "Notification management endpoints"
+        },
+        {
+            "name": "User",
+            "description": "User"
         }
     ]
 }
