@@ -8,6 +8,7 @@ use App\Http\Controllers\FeedController;
 use App\Http\Controllers\FeedScheduleController;
 use App\Http\Controllers\PondController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\UserController;
 
 /*
 |--------------------------------------------------------------------------
@@ -29,6 +30,10 @@ Route::post('/login', [AuthController::class, 'login']);
 
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
+
+    Route::get('/user/profile', [UserController::class, 'profile']);
+    Route::put('/user/profile', [UserController::class, 'update']);
+    Route::delete('/user/account', [UserController::class, 'destroy']);
 
     Route::get('/sensor-data/history', [SensorController::class, 'history']);
 
