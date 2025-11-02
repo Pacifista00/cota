@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  app:
+    # image: ${DOCKERHUB_USERNAME}/${DOCKER_PROJECT_ID}:prod
+    build:
+      context: ./
+      dockerfile: ./docker/app/Dockerfile
+    container_name: ${DOCKER_PROJECT_ID}.app.production
+    volumes:
+      - app-data:/var/www
+      - ./.env:/var/www/.env
+    environment:
+      DB_CONNECTION: mysql
+      DB_HOST: database
+    depends_on:
+      - database
+    networks:
+      - app
+    restart: unless-stopped
+
+  web:
+    image: nginx:alpine
+    container_name: ${DOCKER_PROJECT_ID}.web.production
+    volumes:
+      - app-data:/var/www:ro
+      - ./docker/web/default.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "${DOCKER_PORT_WEB}:80"
+    networks:
+      - app
+    depends_on:
+      - app
+    restart: unless-stopped
+
+  database:
+    image: mariadb:10.6.14-focal
+    container_name: ${DOCKER_PROJECT_ID}.database.production
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD_ROOT}
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - app
+    restart: unless-stopped
+
+volumes:
+  app-data:
+    name: ${DOCKER_PROJECT_ID}.app.production
+  mysql-data:
+    name: ${DOCKER_PROJECT_ID}.database.production
+
+networks:
+  app:
+    driver: bridge
+    name: ${DOCKER_PROJECT_ID}.network.production
