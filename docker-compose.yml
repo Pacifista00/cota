@@ -8,8 +8,9 @@ services:
       dockerfile: ./docker/app/Dockerfile
     container_name: ${DOCKER_PROJECT_ID}.app.production
     volumes:
-      - app-data:/var/www
-      - ./.env:/var/www/.env
+      - app-public-data:/var/www/public
+      - app-vendor-data:/var/www/vendor
+      - ./:/var/www
     environment:
       DB_CONNECTION: mysql
       DB_HOST: database
@@ -23,7 +24,7 @@ services:
     image: nginx:alpine
     container_name: ${DOCKER_PROJECT_ID}.web.production
     volumes:
-      - app-data:/var/www:ro
+      - ./:/var/www:ro
       - ./docker/web/default.conf:/etc/nginx/conf.d/default.conf:ro
     ports:
       - "${DOCKER_PORT_WEB}:80"
@@ -48,8 +49,10 @@ services:
     restart: unless-stopped
 
 volumes:
-  app-data:
-    name: ${DOCKER_PROJECT_ID}.app.production
+  app-public-data:
+    name: ${DOCKER_PROJECT_ID}.app-public.production
+  app-vendor-data:
+    name: ${DOCKER_PROJECT_ID}.app-vendor.production
   mysql-data:
     name: ${DOCKER_PROJECT_ID}.database.production
 
