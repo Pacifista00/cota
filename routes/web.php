@@ -5,6 +5,7 @@ use App\Http\Controllers\MainController;
 use App\Http\Controllers\FeedController;
 use App\Http\Controllers\AuthWebController;
 use App\Http\Controllers\PondController;
+use App\Http\Controllers\PrivacyPolicyController;
 
 
 /*
@@ -27,6 +28,9 @@ Route::get('/register', [AuthWebController::class, 'registerForm']);
 
 Route::post('/register', [AuthWebController::class, 'register']);
 Route::post('/login', [AuthWebController::class, 'login']);
+
+// Public route for Google Play Store compliance
+Route::get('/privacy-policy', [PrivacyPolicyController::class, 'show'])->name('privacy-policy');
 
 Route::middleware(['auth'])->group(function () {
     Route::post('/logout', [AuthWebController::class, 'logout']);

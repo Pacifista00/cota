@@ -19,7 +19,6 @@ services:
     networks:
       - app
     restart: unless-stopped
-  
   web:
     image: nginx:alpine
     container_name: ${DOCKER_PROJECT_ID}.web.production
